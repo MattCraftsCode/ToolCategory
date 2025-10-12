@@ -41,6 +41,8 @@ export function SubmissionPreview({
 }: SubmissionPreviewProps) {
   const hasActions = Boolean(actions?.length);
   const isDashboard = variant === "dashboard";
+  const isPublished = status.toLowerCase() === "published";
+  const primaryActionLabel = isPublished ? "Unpublish" : "Verify Badge & Submit";
 
   return (
     <section className={cn("w-full rounded-[32px] border border-[#ebecf3] bg-white/95 p-8", className)}>
@@ -80,7 +82,7 @@ export function SubmissionPreview({
           </div>
 
           <div className="flex flex-col justify-between gap-6">
-            <div className="grid gap-5 sm:grid-cols-2">
+            <div className="grid gap-x-6 gap-y-3 sm:grid-cols-2">
               {[{ label: "Plan", value: plan }, { label: "Status", value: status }, { label: "Publish Date", value: publishDate }, { label: "Created Date", value: createdDate }].map(({ label, value }) => (
                 <div key={label} className="space-y-2">
                   <span className="text-xs font-semibold uppercase tracking-[0.3em] text-[#a1a1aa]">
@@ -93,16 +95,22 @@ export function SubmissionPreview({
 
             {hasActions ? (
               <div className="mt-2 flex flex-wrap gap-3">
-                {actions!.map((action) => (
-                  <Button
-                    key={action.label}
-                    type="button"
-                    className="inline-flex items-center gap-2 rounded-full border border-[#e4e4eb] bg-white px-4 py-2 text-sm font-semibold text-[#1f1f24] shadow-none transition hover:border-[#ff6d57] hover:text-[#ff6d57]"
-                >
-                  <action.icon className="h-4 w-4" />
-                  {action.label}
-                </Button>
-                ))}
+                {actions!.map((action, index) => {
+                  const isPrimary = index === 0;
+                  const buttonClasses = cn(
+                    "group inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition-all duration-200 shadow-none",
+                    isPrimary && !isPublished
+                      ? "bg-[#ff6d57] text-white hover:bg-[#ff826f]"
+                      : "border border-[#e4e4eb] bg-white text-[#1f1f24] hover:bg-[#f5f5f8]"
+                  );
+
+                  return (
+                    <Button key={action.label} type="button" className={buttonClasses}>
+                      <action.icon className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
+                      {isPrimary ? primaryActionLabel : action.label}
+                    </Button>
+                  );
+                })}
               </div>
             ) : null}
           </div>

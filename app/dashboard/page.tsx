@@ -1,5 +1,13 @@
 import { BadgeCheck, ShieldCheck, PencilLine } from "lucide-react";
 
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import { SubmissionPreview } from "@/components/SubmissionPreview";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -47,6 +55,9 @@ const actions = [
   { label: "Edit", icon: PencilLine },
 ];
 
+const totalPages = 5;
+const currentPage = 1;
+
 export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-white via-[#faf5ff] to-white text-[#1f1f24]">
@@ -63,6 +74,29 @@ export default function DashboardPage() {
             <SubmissionPreview key={submission.title} {...submission} actions={actions} />
           ))}
         </div>
+
+        <Pagination className="mt-12">
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious href="#" isDisabled={currentPage === 1} />
+            </PaginationItem>
+            {Array.from({ length: totalPages }, (_, index) => {
+              const page = index + 1;
+              const isActive = page === currentPage;
+
+              return (
+                <PaginationItem key={page}>
+                  <PaginationLink href="#" isActive={isActive}>
+                    {page}
+                  </PaginationLink>
+                </PaginationItem>
+              );
+            })}
+            <PaginationItem>
+              <PaginationNext href="#" isDisabled={currentPage === totalPages} />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
       </main>
 
       <SiteFooter />
