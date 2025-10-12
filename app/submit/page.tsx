@@ -3,6 +3,7 @@
 import { ArrowUp, ChevronDown, Image, Search, Wand2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
+import { SumitSteps } from "@/components/SumitSteps";
 import { MarkdownEditor } from "@/components/markdown-editor";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -34,7 +35,7 @@ export default function SubmitPage() {
 
       <main className="mx-auto flex w-full max-w-[92rem] flex-col px-6 pb-20 pt-14 lg:px-12 xl:px-20">
         <section className="space-y-12">
-          <header className="space-y-3">
+          <header className="space-y-8">
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-[2.5rem] font-semibold tracking-tight text-[#17171c]">
@@ -45,40 +46,8 @@ export default function SubmitPage() {
                   review, categorize, and feature your product in the best collections.
                 </p>
               </div>
-              <div className="hidden items-center gap-2 rounded-full border border-[#e2e2e8] px-3 py-1 text-xs font-semibold text-[#6a6a74] sm:flex">
-                <span className="rounded-full bg-[#ffede7] px-2 py-0.5 text-[#ff7d68]">1 / 3</span>
-                <span>Enter product details</span>
-              </div>
             </div>
-
-            <nav className="flex flex-1 flex-wrap items-center justify-center gap-12 text-sm font-semibold text-[#8c8c96]">
-              {[
-                { step: 1, label: "Details" },
-                { step: 2, label: "Payment" },
-                { step: 3, label: "Publish" },
-              ].map(({ step, label }, index, arr) => (
-                <div key={label} className="flex items-center gap-6">
-                  <button
-                    type="button"
-                    className={`group flex cursor-pointer flex-col items-center gap-3 transition ${
-                      step === 1 ? "text-[#1f1f24]" : "text-[#a6a6ae]"
-                    }`}
-                  >
-                    <span
-                      className={`flex size-9 items-center justify-center rounded-full text-sm font-semibold ${
-                        step === 1 ? "bg-[#ff7d68] text-white" : "bg-[#f2f2f6] text-[#8a8a92]"
-                      }`}
-                    >
-                      {step}
-                    </span>
-                    <span>{label}</span>
-                  </button>
-                  {index < arr.length - 1 ? (
-                    <span className="block h-px w-32 bg-[#f1f1f4]" aria-hidden />
-                  ) : null}
-                </div>
-              ))}
-            </nav>
+            <SumitSteps current="details" />
           </header>
 
           <form className="space-y-10 rounded-[10px] border border-[#e5e5ea] bg-white p-10">

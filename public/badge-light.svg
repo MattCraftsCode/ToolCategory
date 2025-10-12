@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 54" width="220" height="54">
+  <g fill="none" fill-rule="evenodd">
+    <rect x="0.75" y="0.75" width="218.5" height="52.5" rx="11" fill="#FFFFFF" stroke="#FF6D57" stroke-width="1.5" />
+    <text font-family="Helvetica-Bold, Helvetica" font-size="9" font-weight="bold" fill="#FF6D57">
+      <tspan x="53" y="20">FEATURED ON</tspan>
+    </text>
+    <text font-family="Helvetica-Bold, Helvetica" font-size="17" font-weight="bold" fill="#FF6D57">
+      <tspan x="52" y="40">ToolCategory.com</tspan>
+    </text>
+    <g transform="translate(11 12)">
+      <circle cx="15.5" cy="15.5" r="15.5" fill="#FF6D57" />
+      <text x="15.5" y="21" text-anchor="middle" font-family="Helvetica-Bold, Helvetica" font-size="12" font-weight="bold" fill="#FFFFFF">
+        TC
+      </text>
+    </g>
+  </g>
+</svg>
