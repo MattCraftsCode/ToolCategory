@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm add next-auth@beta @auth/drizzle-adapter drizzle-orm pg)",
+      "Bash(pnpm add -D @types/pg drizzle-kit)",
+      "Bash(mkdir -p /Users/C5350444/workspace/toolcategory/lib/db)",
+      "Bash(pnpm add postgres)",
+      "Bash(pnpm drizzle-kit generate)",
+      "Bash(pnpm drizzle-kit push)",
+      "Bash(pkill -f \"drizzle-kit\")",
+      "Bash(pnpm add @radix-ui/react-dialog)",
+      "Bash(pnpm add next-auth@beta)",
+      "Bash(pnpm add -D tsx)",
+      "Bash(pnpm db:setup)",
+      "Bash(pnpm add -D dotenv)",
+      "Bash(pnpm db:verify)",
+      "Bash(pnpm db:check-users)",
+      "Bash(pnpm db:migrate-names)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
