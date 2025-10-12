@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { SignInDialog } from "@/components/sign-in-dialog";
 
 const navLinks = [
-  { label: "Category", href: "#" },
+  { label: "Category", href: "/category" },
   { label: "Collection", href: "#" },
   { label: "Blog", href: "#" },
   { label: "Pricing", href: "/pricing" },
@@ -91,7 +91,7 @@ export function SiteHeader() {
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setShowDropdown(!showDropdown)}
-                  className="flex h-10 w-10 items-center justify-center rounded-full bg-[#ffe1d9] text-sm font-semibold text-[#a0523f] transition hover:bg-[#ffd4c9]"
+                  className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-[#ffe1d9] text-sm font-semibold text-[#a0523f] transition hover:bg-[#ffd4c9]"
                 >
                   {getUserInitials(session.user?.name)}
                 </button>
@@ -106,7 +106,7 @@ export function SiteHeader() {
                     <hr className="my-2" />
                     <Link
                       href="/dashboard"
-                      className="flex w-full items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      className="flex w-full cursor-pointer items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                       onClick={() => setShowDropdown(false)}
                     >
                       <LayoutDashboard className="h-4 w-4" />
@@ -114,7 +114,7 @@ export function SiteHeader() {
                     </Link>
                     <Link
                       href="/submit"
-                      className="flex w-full items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      className="flex w-full cursor-pointer items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                       onClick={() => setShowDropdown(false)}
                     >
                       <Upload className="h-4 w-4" />
@@ -126,7 +126,7 @@ export function SiteHeader() {
                         setShowDropdown(false);
                         signOut({ callbackUrl: "/" });
                       }}
-                      className="flex w-full items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      className="flex w-full cursor-pointer items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     >
                       <LogOut className="h-4 w-4" />
                       Sign Out

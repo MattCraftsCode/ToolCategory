@@ -1,10 +1,11 @@
 "use client";
 
-import { ArrowUp, ChevronDown, Image, Search, Wand2 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { ArrowUp, Image, Wand2 } from "lucide-react";
+import { useState } from "react";
 
 import { SumitSteps } from "@/components/SumitSteps";
 import { MarkdownEditor } from "@/components/markdown-editor";
+import { MultiSelect } from "@/components/multi-select";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
@@ -86,6 +87,7 @@ export default function SubmitPage() {
                 options={toolCategories}
                 value={selectedCategories}
                 onChange={setSelectedCategories}
+                borderClassName="border-[#e0e0e6] hover:border-[#ff7d68] focus:border-[#ff7d68]"
               />
               <MultiSelect
                 label="Tags"
@@ -93,6 +95,7 @@ export default function SubmitPage() {
                 options={tagOptions}
                 value={selectedTags}
                 onChange={setSelectedTags}
+                borderClassName="border-[#e0e0e6] hover:border-[#ff7d68] focus:border-[#ff7d68]"
               />
             </div>
 
@@ -124,7 +127,7 @@ export default function SubmitPage() {
                 <span className="text-xs font-normal text-[#9a9aa3]">(16:9, PNG or JPEG, max 1MB)</span>
               </div>
               <div className="flex min-h-[220px] flex-col items-center justify-center gap-3 rounded-[12px] border border-dashed border-[#d7d7dd] text-sm text-[#858593] transition hover:bg-[#f7f7f9]">
-                <Image className="h-7 w-7 text-[#c4c4cc]" />
+                <Image alt="" className="h-7 w-7 text-[#c4c4cc]" />
                 <span className="text-sm text-[#7a7a87]">Drag &amp; drop or select image to upload</span>
               </div>
             </div>
@@ -155,134 +158,6 @@ export default function SubmitPage() {
       >
         <ArrowUp className="h-5 w-5" />
       </a>
-    </div>
-  );
-}
-
-function MultiSelect({
-  label,
-  placeholder,
-  options,
-  value,
-  onChange,
-}: {
-  label: string;
-  placeholder: string;
-  options: string[];
-  value: string[];
-  onChange: (next: string[]) => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const [query, setQuery] = useState("");
-  const containerRef = useRef<HTMLDivElement>(null);
-  const filtered = options.filter((option) =>
-    option.toLowerCase().includes(query.trim().toLowerCase())
-  );
-
-  const toggleOption = (option: string) => {
-    if (value.includes(option)) {
-      onChange(value.filter((item) => item !== option));
-    } else {
-      onChange(Array.from(new Set([...value, option])));
-    }
-  };
-
-  useEffect(() => {
-    const listener = (event: MouseEvent) => {
-      if (!containerRef.current?.contains(event.target as Node)) {
-        setOpen(false);
-      }
-    };
-    window.addEventListener("mousedown", listener);
-    return () => window.removeEventListener("mousedown", listener);
-  }, []);
-
-  useEffect(() => {
-    const listener = (event: MouseEvent) => {
-      if (!containerRef.current?.contains(event.target as Node)) {
-        setOpen(false);
-      }
-    };
-    window.addEventListener("mousedown", listener);
-    return () => window.removeEventListener("mousedown", listener);
-  }, []);
-
-  return (
-    <div ref={containerRef} className="flex flex-col gap-2 text-sm font-medium text-[#1f1f24]">
-      <span>{label}</span>
-      <div className="relative">
-        <button
-          type="button"
-          className="h-12 w-full cursor-pointer rounded-[10px] border border-[#e0e0e6] bg-white px-4 text-left text-sm text-[#2d2d32] transition hover:border-[#ff7d68] focus:border-[#ff7d68] focus:outline-none focus:ring-2 focus:ring-[#ff7d68]/15"
-          onClick={() => setOpen((prev) => !prev)}
-        >
-          <div className="flex items-center justify-between gap-2">
-            <span className="truncate text-[#2d2d32]">
-              {value.length > 0 ? value.join(", ") : placeholder}
-            </span>
-            <ChevronDown className="h-5 w-5 text-[#b3b3ba]" />
-          </div>
-        </button>
-        {open ? (
-          <div className="absolute z-30 mt-2 w-full rounded-[12px] border border-[#ececf2] bg-white p-3 shadow-[0_16px_40px_-30px_rgba(15,23,42,0.18)]">
-            <div className="flex items-center gap-2 rounded-[8px] border border-[#e9e9ed] bg-[#f9f9fb] px-3 py-2 text-xs text-[#7a7a87]">
-              <Search className="h-4 w-4" />
-              <input
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="Search..."
-                className="w-full border-0 bg-transparent text-sm text-[#2d2d32] outline-none"
-              />
-            </div>
-            <div className="mt-3 max-h-48 space-y-1 overflow-y-auto pr-1 text-sm text-[#2d2d32]">
-              {filtered.length === 0 ? (
-                <p className="rounded-[10px] bg-[#f5f5f8] px-3 py-2 text-xs text-[#9a9aa3]">
-                  No results found.
-                </p>
-              ) : (
-                filtered.map((option) => {
-                  const selected = value.includes(option);
-                  return (
-                    <button
-                      key={option}
-                      type="button"
-                      className="flex w-full cursor-pointer items-center gap-3 rounded-[8px] px-3 py-2 text-left transition hover:bg-[#f8f8fb]"
-                      onClick={() => toggleOption(option)}
-                    >
-                      <span
-                        className={`flex h-4 w-4 items-center justify-center rounded-full border transition ${
-                          selected
-                            ? "border-[#ff7d68] bg-[#ff7d68] text-white"
-                            : "border-[#d7d7dd] text-transparent"
-                        }`}
-                      >
-                        ●
-                      </span>
-                      <span>{option}</span>
-                    </button>
-                  );
-                })
-              )}
-            </div>
-            <div className="mt-3 flex items-center justify-between border-t border-[#f2f2f4] pt-3 text-xs text-[#8a8a94]">
-              <button
-                type="button"
-                className="cursor-pointer text-[#ff7d68] transition hover:text-[#ff6b54]"
-                onClick={() => onChange(Array.from(new Set(options)))}
-              >
-                Select all
-              </button>
-              <button
-                type="button"
-                className="cursor-pointer text-[#ff7d68] transition hover:text-[#ff6b54]"
-                onClick={() => onChange([])}
-              >
-                Clear
-              </button>
-            </div>
-          </div>
-        ) : null}
-      </div>
     </div>
   );
 }

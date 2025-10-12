@@ -40,7 +40,6 @@ export function SubmissionPreview({
   variant = "default",
 }: SubmissionPreviewProps) {
   const hasActions = Boolean(actions?.length);
-  const isDashboard = variant === "dashboard";
   const isPublished = status.toLowerCase() === "published";
   const primaryActionLabel = isPublished ? "Unpublish" : "Verify Badge & Submit";
 

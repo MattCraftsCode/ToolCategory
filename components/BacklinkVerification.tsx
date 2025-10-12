@@ -148,8 +148,8 @@ export function BacklinkVerification() {
           <div>
             <p className="font-semibold text-[#3f4d6c]">Badge Verification</p>
             <p className="text-sm text-[#5a6b8b]">
-              Add the badge code to your website and click "Verify Badge" to verify. This is required
-              for free plans and optional for paid plans.
+              Add the badge code to your website and click &quot;Verify Badge&quot; to verify. This is
+              required for free plans and optional for paid plans.
             </p>
           </div>
         </div>

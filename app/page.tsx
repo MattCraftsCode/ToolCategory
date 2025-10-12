@@ -1,11 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowUp, Search, Sparkles } from "lucide-react";
+import { Search, Sparkles } from "lucide-react";
 
+import { BackToTopButton } from "@/components/back-to-top-button";
+import { CategoryList } from "@/components/category-list";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
-import { toolCategories } from "@/lib/site-data";
 import { cn } from "@/lib/utils";
 
 type Tool = {
@@ -433,20 +434,23 @@ const toolSections = [
 function ToolCard({ tool }: { tool: Tool }) {
   return (
     <article className="group flex cursor-pointer flex-col overflow-hidden rounded-[14px] border border-[#e9e9ed] bg-white transition-shadow duration-300">
-      <div className="relative h-44 overflow-hidden rounded-t-[14px]">
+      <div className="group/image relative h-44 overflow-hidden rounded-t-[14px]">
         <Image
           src={tool.image}
           alt={tool.name}
           fill
           sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 25vw"
-          className="object-cover transition-transform duration-300 ease-out group-hover:scale-105"
+          className="object-cover transition-transform duration-300 ease-out group-hover/image:scale-105"
         />
-        <div className="absolute inset-0 bg-[#0b1120]/0 transition-colors duration-300 ease-out group-hover:bg-[#0b1120]/45" />
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-sm font-semibold uppercase tracking-[0.2em] text-white opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+        <div className="absolute inset-0 bg-[#0b1120]/0 transition-colors duration-300 ease-out group-hover/image:bg-[#0b1120]/45" />
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-sm font-semibold uppercase tracking-[0.2em] text-white opacity-0 transition-opacity duration-300 group-hover/image:opacity-100">
           View Details
         </div>
       </div>
-      <div className="space-y-3 px-6 pb-6 pt-6">
+      <div className="relative space-y-3 px-6 pb-6 pt-6">
+        <span className="pointer-events-none absolute right-6 top-6 text-xs font-semibold text-[#7f7f88] opacity-0 transition duration-200 group-hover:translate-x-1 group-hover:opacity-100">
+          Details →
+        </span>
         <div className="flex items-center gap-2 text-lg font-semibold text-[#1f1f24]">
           <span role="img" aria-label="bookmark" className="text-base">
             🔖
@@ -479,13 +483,16 @@ export default function Home() {
       <div className="mx-auto flex min-h-screen w-full max-w-[92rem] flex-col px-6 pb-20 pt-12 lg:px-12 xl:px-20">
         <main className="flex flex-1 flex-col items-center pt-6">
           <div className="flex flex-col items-center gap-6 text-center">
-            <button className="flex items-center gap-2 rounded-full border border-[#ffe0d6] bg-white px-5 py-2 text-sm font-medium text-[#ff7d68] shadow-[0_16px_40px_-30px_rgba(255,125,104,1)]">
+            <Link
+              href="/category"
+              className="flex items-center gap-2 rounded-full border border-[#ffe0d6] bg-white px-5 py-2 text-sm font-medium text-[#ff7d68] shadow-[0_16px_40px_-30px_rgba(255,125,104,1)] transition hover:border-[#ffb8aa] hover:text-[#ff6b54]"
+            >
               <span role="img" aria-label="party popper">
                 🎉
               </span>
               5 New Tools Added This Week
               <span className="text-base">→</span>
-            </button>
+            </Link>
             <h1 className="max-w-5xl text-4xl font-semibold tracking-tight text-[#17171c] sm:text-[3.35rem] sm:leading-[1.08]">
               Find <span className="text-[#1f1f1f]">Tools.</span> Explore
               <span className="text-[#ff7d68]"> Categories.</span>
@@ -506,19 +513,7 @@ export default function Home() {
                 <Search className="h-5 w-5" />
               </Button>
             </div>
-            <div className="mt-6 flex flex-wrap justify-center gap-3">
-              <button className="rounded-full border border-[#ff7d68] bg-[#ff7d68] px-5 py-2 text-sm font-medium text-white shadow-[0_10px_25px_-18px_rgba(255,125,104,1)]">
-                All
-              </button>
-              {toolCategories.map((category) => (
-                <button
-                  key={category}
-                  className="cursor-pointer rounded-full border border-[#e8e8ec] bg-white px-5 py-2 text-sm font-medium text-[#616168] transition hover:border-[#ffb8aa] hover:text-[#ff7d68]"
-                >
-                  {category}
-                </button>
-              ))}
-            </div>
+            <CategoryList className="mt-6" />
           </div>
 
           {toolSections.map((section, index) => (
@@ -551,13 +546,7 @@ export default function Home() {
 
       <SiteFooter />
 
-      <a
-        href="#top"
-        aria-label="Back to top"
-        className="fixed bottom-6 right-6 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-[#ff7d68] text-white shadow-[0_20px_40px_-18px_rgba(255,125,104,0.7)] transition hover:bg-[#ff6b54]"
-      >
-        <ArrowUp className="h-5 w-5" />
-      </a>
+      <BackToTopButton />
     </div>
   );
 }
