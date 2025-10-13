@@ -17,6 +17,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { DEFAULT_CATEGORIES, DEFAULT_TAGS } from "@/lib/fallback-data";
 
 type CategoryTool = {
   name: string;
@@ -200,14 +201,65 @@ export default function CategoryPage() {
   const [filterPreset, setFilterPreset] = useState<FilterOption>("No Filter");
   const [sortOption, setSortOption] = useState<SortOption>("time-desc");
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const [categoryOptions, setCategoryOptions] = useState<string[]>(DEFAULT_CATEGORIES);
+  const [tagOptions, setTagOptions] = useState<string[]>(DEFAULT_TAGS);
 
-  const tagOptions = useMemo(() => {
-    return Array.from(
-      new Set(categoryTools.flatMap((tool) => tool.tags)),
-    ).sort((a, b) => a.localeCompare(b));
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadFilterOptions = async () => {
+      try {
+        const [categoriesResponse, tagsResponse] = await Promise.all([
+          fetch("/api/categories", { cache: "no-store" }),
+          fetch("/api/tags", { cache: "no-store" }),
+        ]);
+
+        if (!isMounted) {
+          return;
+        }
+
+        if (categoriesResponse.ok) {
+          const data = (await categoriesResponse.json()) as {
+            categories?: string[];
+          };
+          if (Array.isArray(data?.categories) && data.categories.length > 0) {
+            setCategoryOptions(data.categories);
+          }
+        }
+
+        if (tagsResponse.ok) {
+          const data = (await tagsResponse.json()) as { tags?: string[] };
+          if (Array.isArray(data?.tags) && data.tags.length > 0) {
+            setTagOptions(data.tags);
+          }
+        }
+      } catch (error) {
+        if (process.env.NODE_ENV !== "production") {
+          console.error("Failed to fetch category filters", error);
+        }
+      }
+    };
+
+    loadFilterOptions();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
-  const filteredTools = useMemo(() => {
+  useEffect(() => {
+    if (selectedCategory && !categoryOptions.includes(selectedCategory)) {
+      setSelectedCategory(null);
+    }
+  }, [categoryOptions, selectedCategory]);
+
+  useEffect(() => {
+    setSelectedTags((previous) =>
+      previous.filter((tag) => tagOptions.includes(tag)),
+    );
+  }, [tagOptions]);
+
+const filteredTools = useMemo(() => {
     return categoryTools
       .filter((tool) => {
         if (selectedCategory && tool.category !== selectedCategory) {
@@ -344,6 +396,7 @@ export default function CategoryPage() {
 
           <CategoryList
             className="mt-8"
+            categories={categoryOptions}
             selectedCategory={selectedCategory}
             onCategoryChange={setSelectedCategory}
           />

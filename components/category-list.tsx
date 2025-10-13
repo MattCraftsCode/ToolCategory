@@ -1,6 +1,6 @@
 "use client";
 
-import { toolCategories } from "@/lib/site-data";
+import { DEFAULT_CATEGORIES } from "@/lib/fallback-data";
 import { cn } from "@/lib/utils";
 
 interface CategoryListProps {
@@ -19,7 +19,7 @@ const inactiveClasses =
   "border-[#e8e8ec] bg-white text-[#616168] hover:border-[#ffb8aa] hover:text-[#ff7d68]";
 
 export function CategoryList({
-  categories = toolCategories,
+  categories = DEFAULT_CATEGORIES,
   selectedCategory = null,
   showAll = true,
   onCategoryChange,
@@ -28,6 +28,8 @@ export function CategoryList({
   const handleCategoryClick = (category: string | null) => {
     onCategoryChange?.(category);
   };
+
+  const items = Array.from(new Set(categories.filter(Boolean)));
 
   return (
     <div className={cn("flex flex-wrap justify-center gap-3", className)}>
@@ -44,7 +46,7 @@ export function CategoryList({
           All
         </button>
       )}
-      {categories.map((category) => {
+      {items.map((category) => {
         const isActive = selectedCategory === category;
 
         return (

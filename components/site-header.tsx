@@ -11,7 +11,6 @@ import { SignInDialog } from "@/components/sign-in-dialog";
 
 const navLinks = [
   { label: "Category", href: "/category" },
-  { label: "Collection", href: "#" },
   { label: "Blog", href: "#" },
   { label: "Pricing", href: "/pricing" },
   { label: "Dashboard", href: "/dashboard" },
@@ -96,7 +95,7 @@ export function SiteHeader() {
                   {getUserInitials(session.user?.name)}
                 </button>
                 {showDropdown && (
-                  <div className="absolute right-0 top-12 w-56 rounded-lg border border-gray-200 bg-white py-2 shadow-lg">
+                  <div className="absolute right-0 top-12 w-56 cursor-pointer rounded-lg border border-gray-200 bg-white py-2 shadow-lg">
                     <div className="px-4 py-2 text-sm text-gray-700">
                       <p className="font-semibold">{session.user?.name}</p>
                       <p className="text-xs text-gray-500">

@@ -8,6 +8,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { getCategories } from "@/lib/data-loaders";
 
 type Tool = {
   name: string;
@@ -475,7 +476,9 @@ function ToolCard({ tool }: { tool: Tool }) {
   );
 }
 
-export default function Home() {
+export default async function Home() {
+  const categories = await getCategories();
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-white via-[#fff7f5] to-white text-[#1f1f1f]">
       <SiteHeader />
@@ -513,7 +516,7 @@ export default function Home() {
                 <Search className="h-5 w-5" />
               </Button>
             </div>
-            <CategoryList className="mt-6" />
+            <CategoryList categories={categories} className="mt-6" />
           </div>
 
           {toolSections.map((section, index) => (

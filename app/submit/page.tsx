@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowUp, Image, Wand2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { SumitSteps } from "@/components/SumitSteps";
 import { MarkdownEditor } from "@/components/markdown-editor";
@@ -9,26 +9,68 @@ import { MultiSelect } from "@/components/multi-select";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
-import { toolCategories } from "@/lib/site-data";
-
-const tagOptions = [
-  "AI",
-  "Automation",
-  "Productivity",
-  "Design",
-  "Marketing",
-  "Analytics",
-  "Research",
-  "Beginner",
-  "Browser Extension",
-  "Mobile",
-  "Free",
-  "Paid",
-];
+import { DEFAULT_CATEGORIES, DEFAULT_TAGS } from "@/lib/fallback-data";
 
 export default function SubmitPage() {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [categoryOptions, setCategoryOptions] = useState<string[]>(DEFAULT_CATEGORIES);
+  const [tagOptions, setTagOptions] = useState<string[]>(DEFAULT_TAGS);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadFilters = async () => {
+      try {
+        const [categoriesResponse, tagsResponse] = await Promise.all([
+          fetch("/api/categories", { cache: "no-store" }),
+          fetch("/api/tags", { cache: "no-store" }),
+        ]);
+
+        if (!isMounted) {
+          return;
+        }
+
+        if (categoriesResponse.ok) {
+          const data = (await categoriesResponse.json()) as {
+            categories?: string[];
+          };
+          if (Array.isArray(data?.categories) && data.categories.length > 0) {
+            setCategoryOptions(data.categories);
+          }
+        }
+
+        if (tagsResponse.ok) {
+          const data = (await tagsResponse.json()) as {
+            tags?: string[];
+          };
+          if (Array.isArray(data?.tags) && data.tags.length > 0) {
+            setTagOptions(data.tags);
+          }
+        }
+      } catch (error) {
+        if (process.env.NODE_ENV !== "production") {
+          console.error("Failed to load filter data", error);
+        }
+      }
+    };
+
+    loadFilters();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    setSelectedCategories((previous) =>
+      previous.filter((item) => categoryOptions.includes(item)),
+    );
+  }, [categoryOptions]);
+
+  useEffect(() => {
+    setSelectedTags((previous) => previous.filter((item) => tagOptions.includes(item)));
+  }, [tagOptions]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white via-[#fff7f5] to-white text-[#1f1f1f]">
@@ -84,7 +126,7 @@ export default function SubmitPage() {
               <MultiSelect
                 label="Categories"
                 placeholder="Select categories"
-                options={toolCategories}
+                options={categoryOptions}
                 value={selectedCategories}
                 onChange={setSelectedCategories}
                 borderClassName="border-[#e0e0e6] hover:border-[#ff7d68] focus:border-[#ff7d68]"
