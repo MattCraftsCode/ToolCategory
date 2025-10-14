@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { Upload, LogOut, LayoutDashboard } from "lucide-react";
 import { useSession } from "next-auth/react";
@@ -50,6 +51,8 @@ export function SiteHeader() {
     };
   }, []);
 
+  const userImage = session?.user?.image?.trim() ?? null;
+
   return (
     <>
       <header
@@ -90,9 +93,20 @@ export function SiteHeader() {
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setShowDropdown(!showDropdown)}
-                  className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-[#ffe1d9] text-sm font-semibold text-[#a0523f] transition hover:bg-[#ffd4c9]"
+                  className="relative flex h-10 w-10 cursor-pointer items-center justify-center overflow-hidden rounded-full bg-[#ffe1d9] text-sm font-semibold text-[#a0523f] transition hover:bg-[#ffd4c9]"
+                  aria-label="Account menu"
                 >
-                  {getUserInitials(session.user?.name)}
+                  {userImage ? (
+                    <Image
+                      src={userImage}
+                      alt={session.user?.name ?? "Account avatar"}
+                      fill
+                      className="object-cover"
+                      sizes="40px"
+                    />
+                  ) : (
+                    getUserInitials(session.user?.name)
+                  )}
                 </button>
                 {showDropdown && (
                   <div className="absolute right-0 top-12 w-56 cursor-pointer rounded-lg border border-gray-200 bg-white py-2 shadow-lg">

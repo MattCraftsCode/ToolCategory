@@ -8,7 +8,10 @@ const nextConfig: NextConfig = {
   },
   webpack: (config) => {
     config.resolve.alias = config.resolve.alias ?? {};
-    config.resolve.alias["react-toastify"] = path.resolve(__dirname, "lib/toast");
+    config.resolve.alias["react-toastify"] = path.resolve(
+      __dirname,
+      "lib/toast"
+    );
     return config;
   },
 };

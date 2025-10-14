@@ -4,21 +4,21 @@ import Link from "next/link";
 
 import { cn, slugify } from "@/lib/utils";
 
-type CategoryListItem = {
+type TagListItem = {
   name: string;
   slug: string;
 };
 
-type CategoryInput = CategoryListItem | string;
+type TagInput = TagListItem | string;
 
-interface CategoryListProps {
-  categories?: CategoryInput[];
-  selectedCategory?: string | null;
+type TagListProps = {
+  tags?: TagInput[];
+  selectedTag?: string | null;
+  onTagChange?: (tagSlug: string | null) => void;
   showAll?: boolean;
-  onCategoryChange?: (categorySlug: string | null) => void;
   className?: string;
   emptyMessage?: string;
-}
+};
 
 const baseClasses =
   "cursor-pointer rounded-full border px-5 py-2 text-sm font-medium transition";
@@ -27,7 +27,7 @@ const activeClasses =
 const inactiveClasses =
   "border-[#e8e8ec] bg-white text-[#616168] hover:border-[#ffb8aa] hover:text-[#ff7d68]";
 
-const toCategoryItem = (value: CategoryInput): CategoryListItem => {
+const toTagItem = (value: TagInput): TagListItem => {
   if (typeof value === "string") {
     return { name: value, slug: slugify(value) };
   }
@@ -37,49 +37,49 @@ const toCategoryItem = (value: CategoryInput): CategoryListItem => {
   };
 };
 
-export function CategoryList({
-  categories = [],
-  selectedCategory = null,
+export function TagList({
+  tags = [],
+  selectedTag = null,
+  onTagChange,
   showAll = true,
-  onCategoryChange,
   className,
-  emptyMessage = "No categories available yet.",
-}: CategoryListProps) {
+  emptyMessage = "No tags available yet.",
+}: TagListProps) {
   const normalized = Array.from(
     new Map(
-      (categories ?? [])
-        .map(toCategoryItem)
+      (tags ?? [])
+        .map(toTagItem)
         .map((item) => [item.slug, item] as const),
     ).values(),
   );
 
   const isEmpty = normalized.length === 0;
 
-  const renderButton = (item: CategoryListItem) => {
-    const isActive = selectedCategory === item.slug;
+  const renderButton = (item: TagListItem) => {
+    const isActive = selectedTag === item.slug;
     return (
       <button
         type="button"
         key={item.slug}
-        onClick={() => onCategoryChange?.(item.slug)}
+        onClick={() => onTagChange?.(item.slug)}
         className={cn(baseClasses, isActive ? activeClasses : inactiveClasses)}
         aria-pressed={isActive}
       >
-        {item.name}
+        #{item.name}
       </button>
     );
   };
 
-  const renderLink = (item: CategoryListItem, selected: string | null) => {
+  const renderLink = (item: TagListItem, selected: string | null) => {
     const isActive = selected === item.slug;
     return (
       <Link
         key={item.slug}
-        href={`/category/${item.slug}`}
+        href={`/tag/${item.slug}`}
         className={cn(baseClasses, isActive ? activeClasses : inactiveClasses)}
         aria-current={isActive ? "page" : undefined}
       >
-        {item.name}
+        #{item.name}
       </Link>
     );
   };
@@ -93,36 +93,34 @@ export function CategoryList({
       ) : (
         <>
           {showAll && (
-            onCategoryChange ? (
+            onTagChange ? (
               <button
                 type="button"
-                onClick={() => onCategoryChange(null)}
+                onClick={() => onTagChange(null)}
                 className={cn(
                   baseClasses,
-                  selectedCategory === null ? activeClasses : inactiveClasses,
+                  selectedTag === null ? activeClasses : inactiveClasses,
                 )}
-                aria-pressed={selectedCategory === null}
+                aria-pressed={selectedTag === null}
               >
-                All
+                All tags
               </button>
             ) : (
               <Link
-                href="/category"
+                href="/tag"
                 className={cn(
                   baseClasses,
-                  selectedCategory === null ? activeClasses : inactiveClasses,
+                  selectedTag === null ? activeClasses : inactiveClasses,
                 )}
-                aria-current={selectedCategory === null ? "page" : undefined}
+                aria-current={selectedTag === null ? "page" : undefined}
               >
-                All
+                All tags
               </Link>
             )
           )}
 
           {normalized.map((item) =>
-            onCategoryChange
-              ? renderButton(item)
-              : renderLink(item, selectedCategory),
+            onTagChange ? renderButton(item) : renderLink(item, selectedTag),
           )}
         </>
       )}

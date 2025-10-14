@@ -79,12 +79,17 @@ export function MultiSelect({
           type="button"
           onClick={() => setOpen((prev) => !prev)}
           className={cn(
-            "h-12 w-full cursor-pointer rounded-[10px] border border-[#e0e0e6] bg-white px-4 text-left text-sm text-[#2d2d32] transition hover:border-[#ff7d68] focus:border-[#ff7d68] focus:outline-none focus:ring-2 focus:ring-[#ff7d68]/15",
+            "h-12 w-full cursor-pointer rounded-[10px] border border-[#e0e0e6] bg-white px-4 text-left text-sm text-[#515156] transition hover:border-[#ff7d68] focus:border-[#ff7d68] focus:outline-none focus:ring-2 focus:ring-[#ff7d68]/15",
             borderClassName,
           )}
         >
           <div className="flex items-center justify-between gap-2">
-            <span className="truncate text-[#2d2d32]">
+            <span
+              className={cn(
+                "truncate",
+                value.length > 0 ? "text-[#515156]" : "text-[#7f7f88]",
+              )}
+            >
               {value.length > 0 ? value.join(", ") : placeholder}
             </span>
             <ChevronDown className="h-5 w-5 text-[#b3b3ba]" />

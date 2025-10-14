@@ -3,7 +3,6 @@ import { cache } from "react";
 
 import { db } from "@/lib/db";
 import { categories, siteCategories, siteTags, sites, tags, users } from "@/lib/db/schema";
-import { DEFAULT_CATEGORIES, DEFAULT_TAGS } from "@/lib/fallback-data";
 import { slugify } from "@/lib/utils";
 
 const logError = (context: string, error: unknown) => {
@@ -16,13 +15,6 @@ export type NamedSlug = {
   name: string;
   slug: string;
 };
-
-const DEFAULT_CATEGORY_ITEMS: NamedSlug[] = DEFAULT_CATEGORIES.map((name) => ({
-  name,
-  slug: slugify(name),
-}));
-
-const DEFAULT_TAG_ITEMS = DEFAULT_TAGS;
 
 const ensureNamedSlug = (
   name: string | null | undefined,
@@ -51,14 +43,12 @@ export const getCategories = cache(async (): Promise<NamedSlug[]> => {
       .map((entry) => ensureNamedSlug(entry.name, entry.slug))
       .filter((entry): entry is NamedSlug => Boolean(entry));
 
-    if (items.length > 0) {
-      return items;
-    }
+    return items;
   } catch (error) {
     logError("getCategories", error);
   }
 
-  return DEFAULT_CATEGORY_ITEMS;
+  return [];
 });
 
 export const getTags = cache(async (): Promise<string[]> => {
@@ -72,14 +62,12 @@ export const getTags = cache(async (): Promise<string[]> => {
       .map((entry) => entry.name)
       .filter((name): name is string => Boolean(name));
 
-    if (items.length > 0) {
-      return items;
-    }
+    return items;
   } catch (error) {
     logError("getTags", error);
   }
 
-  return DEFAULT_TAG_ITEMS;
+  return [];
 });
 
 const HOMEPAGE_SECTION_SIZE = 8;
@@ -94,6 +82,7 @@ type SiteRow = {
   link: string | null;
   createdAt: Date | null;
   userId: string | null;
+  isFeatured: boolean | null;
 };
 
 type SiteSection = {
@@ -116,6 +105,7 @@ export type HomePageTool = {
   tags: NamedSlug[];
   categories: NamedSlug[];
   createdAt: Date | null;
+  isFeatured: boolean;
 };
 
 export type HomePageCategorySection = {
@@ -246,6 +236,7 @@ function mapSite(
     tags: tagList,
     categories: categoryList,
     createdAt: row.createdAt,
+    isFeatured: Boolean(row.isFeatured),
   };
 }
 
@@ -266,6 +257,7 @@ function normalizeSiteRows(rows: Partial<SiteRow>[]): SiteRow[] {
       link: row.link ?? null,
       createdAt: row.createdAt ?? null,
       userId: row.userId ?? null,
+      isFeatured: row.isFeatured ?? false,
     }));
 }
 
@@ -304,7 +296,29 @@ const SITE_BASE_SELECTION = {
   link: sites.link,
   createdAt: sites.createdAt,
   userId: sites.userId,
+  isFeatured: sites.isFeatured,
 } satisfies Record<string, unknown>;
+
+export const getDiscoveryTools = cache(async (): Promise<HomePageTool[]> => {
+  try {
+    const rowsRaw = await db
+      .select(SITE_BASE_SELECTION)
+      .from(sites)
+      .orderBy(desc(sites.createdAt));
+
+    const sitesNormalized = normalizeSiteRows(rowsRaw as Partial<SiteRow>[]);
+    const siteIds = sitesNormalized.map((row) => row.id);
+
+    const { categoriesMap, tagsMap } = await loadSiteMetadata(siteIds);
+
+    return sitesNormalized.map((row) =>
+      mapSite(row, categoriesMap, tagsMap),
+    );
+  } catch (error) {
+    logError("getDiscoveryTools", error);
+    return [];
+  }
+});
 
 export const getHomePageSections = cache(async (): Promise<HomePageSections> => {
   try {

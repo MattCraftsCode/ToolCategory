@@ -51,6 +51,11 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, isNew: true }, { status: 201 });
   } catch (error) {
+    const databaseError = error as { code?: string };
+    if (databaseError?.code === "23505") {
+      return NextResponse.json({ success: true, isNew: false });
+    }
+
     if (process.env.NODE_ENV !== "production") {
       console.error("[subscriptions] failed to save subscription", error);
     }
