@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent } from "react";
+import { FormEvent, useState } from "react";
 
 import { toast } from "react-toastify";
 
@@ -12,8 +12,15 @@ type JoinTheCommunityProps = {
 
 // Renders the shared newsletter CTA used across detail and marketing pages.
 export function JoinTheCommunity({ className }: JoinTheCommunityProps) {
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    if (isSubmitting) {
+      return;
+    }
+
     const form = event.currentTarget;
     const formData = new FormData(form);
     const email = String(formData.get("email") ?? "").trim();
@@ -23,8 +30,37 @@ export function JoinTheCommunity({ className }: JoinTheCommunityProps) {
       return;
     }
 
-    toast.success("Thanks for subscribing! We'll tip you off as soon as fresh tools arrive.");
-    form.reset();
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch("/api/subscriptions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = (await response.json().catch(() => null)) as
+        | { success?: boolean; isNew?: boolean; error?: string }
+        | null;
+
+      if (!response.ok || !data?.success) {
+        const message = data?.error ?? "We couldn’t save your subscription. Please try again.";
+        toast.error(message);
+        return;
+      }
+
+      if (data.isNew === false) {
+        toast.info("You’re already on the list. Stay tuned!");
+      } else {
+        toast.success("Thanks for subscribing! We'll tip you off as soon as fresh tools arrive.");
+      }
+
+      form.reset();
+    } catch {
+      toast.error("We couldn’t save your subscription. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -57,8 +93,10 @@ export function JoinTheCommunity({ className }: JoinTheCommunityProps) {
           />
           <button
             type="submit"
-            className="flex h-12 w-12 cursor-pointer items-center justify-center rounded-full bg-[#ff6d57] text-white transition hover:bg-[#ff5a43]"
+            disabled={isSubmitting}
+            className="flex h-12 w-12 cursor-pointer items-center justify-center rounded-full bg-[#ff6d57] text-white transition hover:bg-[#ff5a43] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-[#ff6d57]"
             aria-label="Subscribe"
+            aria-disabled={isSubmitting}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"

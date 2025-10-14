@@ -94,6 +94,12 @@ export const sites = pgTable("sites", {
   isFeatured: boolean("is_featured").notNull().default(false),
 });
 
+export const subscriptions = pgTable("subscriptions", {
+  id: bigserial("id", { mode: "number" }).primaryKey(),
+  email: varchar("email", { length: 255 }).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+});
+
 export const siteCategories = pgTable("site_categories", {
   id: bigserial("id", { mode: "number" }).primaryKey(),
   categoryId: bigint("category_id", { mode: "number" })
