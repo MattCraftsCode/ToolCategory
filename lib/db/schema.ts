@@ -5,6 +5,10 @@ import {
   primaryKey,
   integer,
   serial,
+  boolean,
+  bigserial,
+  bigint,
+  varchar,
 } from "drizzle-orm/pg-core";
 import type { AdapterAccount } from "next-auth/adapters";
 
@@ -63,11 +67,51 @@ export const verificationTokens = pgTable(
 );
 
 export const categories = pgTable("categories", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull().unique(),
+  id: bigserial("id", { mode: "number" }).primaryKey(),
+  name: varchar("name", { length: 100 }).notNull().unique(),
+  slug: varchar("slug", { length: 120 }).notNull().unique(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
 export const tags = pgTable("tags", {
   id: serial("id").primaryKey(),
   name: text("name").notNull().unique(),
+  slug: varchar("slug", { length: 120 }).notNull().unique(),
+});
+
+export const sites = pgTable("sites", {
+  id: bigserial("id", { mode: "number" }).primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  introduction: text("introduction"),
+  image: varchar("image", { length: 512 }),
+  link: varchar("link", { length: 512 }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+  description: text("description"),
+  isFeatured: boolean("is_featured").notNull().default(false),
+});
+
+export const siteCategories = pgTable("site_categories", {
+  id: bigserial("id", { mode: "number" }).primaryKey(),
+  categoryId: bigint("category_id", { mode: "number" })
+    .references(() => categories.id)
+    .notNull(),
+  siteId: bigint("site_id", { mode: "number" })
+    .references(() => sites.id)
+    .notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
+
+export const siteTags = pgTable("site_tags", {
+  id: bigserial("id", { mode: "number" }).primaryKey(),
+  tagId: bigint("tag_id", { mode: "number" })
+    .references(() => tags.id)
+    .notNull(),
+  siteId: bigint("site_id", { mode: "number" })
+    .references(() => sites.id)
+    .notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });

@@ -18,6 +18,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { DEFAULT_CATEGORIES, DEFAULT_TAGS } from "@/lib/fallback-data";
+import { slugify } from "@/lib/utils";
 
 type CategoryTool = {
   name: string;
@@ -28,6 +29,16 @@ type CategoryTool = {
   featured?: boolean;
   addedAt: string;
 };
+
+type CategoryOption = {
+  name: string;
+  slug: string;
+};
+
+const defaultCategoryOptions: CategoryOption[] = DEFAULT_CATEGORIES.map((name) => ({
+  name,
+  slug: slugify(name),
+}));
 
 const categoryTools: CategoryTool[] = [
   {
@@ -201,7 +212,9 @@ export default function CategoryPage() {
   const [filterPreset, setFilterPreset] = useState<FilterOption>("No Filter");
   const [sortOption, setSortOption] = useState<SortOption>("time-desc");
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
-  const [categoryOptions, setCategoryOptions] = useState<string[]>(DEFAULT_CATEGORIES);
+  const [categoryOptions, setCategoryOptions] = useState<CategoryOption[]>(
+    defaultCategoryOptions,
+  );
   const [tagOptions, setTagOptions] = useState<string[]>(DEFAULT_TAGS);
 
   useEffect(() => {
@@ -220,10 +233,29 @@ export default function CategoryPage() {
 
         if (categoriesResponse.ok) {
           const data = (await categoriesResponse.json()) as {
-            categories?: string[];
+            categories?: Array<{ name?: string; slug?: string } | string>;
           };
           if (Array.isArray(data?.categories) && data.categories.length > 0) {
-            setCategoryOptions(data.categories);
+            const mapped = data.categories
+              .map((item) => {
+                if (typeof item === "string") {
+                  return { name: item, slug: slugify(item) } satisfies CategoryOption;
+                }
+                const name = typeof item?.name === "string" ? item.name : "";
+                if (!name.trim()) {
+                  return null;
+                }
+                const slug =
+                  typeof item?.slug === "string" && item.slug.trim().length > 0
+                    ? item.slug.trim()
+                    : slugify(name);
+                return { name, slug } satisfies CategoryOption;
+              })
+              .filter((entry): entry is CategoryOption => Boolean(entry && entry.name));
+
+            if (mapped.length > 0) {
+              setCategoryOptions(mapped);
+            }
           }
         }
 
@@ -248,7 +280,10 @@ export default function CategoryPage() {
   }, []);
 
   useEffect(() => {
-    if (selectedCategory && !categoryOptions.includes(selectedCategory)) {
+    if (
+      selectedCategory &&
+      !categoryOptions.some((option) => option.slug === selectedCategory)
+    ) {
       setSelectedCategory(null);
     }
   }, [categoryOptions, selectedCategory]);
@@ -262,7 +297,7 @@ export default function CategoryPage() {
 const filteredTools = useMemo(() => {
     return categoryTools
       .filter((tool) => {
-        if (selectedCategory && tool.category !== selectedCategory) {
+        if (selectedCategory && slugify(tool.category) !== selectedCategory) {
           return false;
         }
 
