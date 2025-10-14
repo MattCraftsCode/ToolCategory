@@ -83,9 +83,11 @@ export const tags = pgTable("tags", {
 export const sites = pgTable("sites", {
   id: bigserial("id", { mode: "number" }).primaryKey(),
   name: varchar("name", { length: 100 }).notNull(),
+  slug: varchar("slug", { length: 120 }).notNull().unique(),
   introduction: text("introduction"),
   image: varchar("image", { length: 512 }),
   link: varchar("link", { length: 512 }),
+  userId: text("user_id").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
   description: text("description"),

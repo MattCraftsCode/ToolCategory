@@ -141,6 +141,14 @@ html {
     -webkit-line-clamp: 2;
     overflow: hidden;
   }
+
+  .toast-enter {
+    animation: toast-pop-in 0.35s ease forwards;
+  }
+
+  .toast-leave {
+    animation: toast-pop-out 0.25s ease forwards;
+  }
 }
 
 .marquee-container {
@@ -163,5 +171,27 @@ html {
   }
   100% {
     transform: translateX(-50%);
+  }
+}
+
+@keyframes toast-pop-in {
+  0% {
+    opacity: 0;
+    transform: translateY(-12px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes toast-pop-out {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-12px) scale(0.95);
   }
 }

@@ -9,7 +9,7 @@ import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
 import type { HomePageTool } from "@/lib/data-loaders";
 import { getCategories, getHomePageSections } from "@/lib/data-loaders";
-import { cn } from "@/lib/utils";
+import { cn, normalizeExternalUrl } from "@/lib/utils";
 
 const imageGallery = [
   "https://images.unsplash.com/photo-1523475472560-d2df97ec485c?auto=format&fit=crop&w=1200&q=80",
@@ -71,48 +71,68 @@ function ToolCard({ tool, isFeatured }: { tool: HomePageTool; isFeatured?: boole
   const isTagList = tool.tags.length > 0;
   const labels = isTagList ? tool.tags : tool.categories;
   const hasLabels = labels.length > 0;
+  const detailHref = `/sites/${tool.slug}`;
+  const externalHref = normalizeExternalUrl(tool.link);
+  const canOpenExternal = Boolean(isFeatured && externalHref);
+
+  const imageOverlay = (
+    <>
+      <Image
+        src={imageSrc}
+        alt={tool.name}
+        fill
+        sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 25vw"
+        className="object-cover transition-transform duration-300 ease-out group-hover/image:scale-105"
+      />
+      <div className="absolute inset-0 bg-[#0b1120]/0 transition-colors duration-300 ease-out group-hover/image:bg-[#0b1120]/45" />
+      <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-sm font-semibold uppercase tracking-[0.2em] text-white opacity-0 transition-opacity duration-300 group-hover/image:opacity-100">
+        {canOpenExternal ? "VIEW WEBSITE" : "VIEW DETAILS"}
+      </div>
+    </>
+  );
 
   return (
     <article className="group flex flex-col overflow-hidden rounded-[14px] border border-[#e9e9ed] bg-white">
+      {canOpenExternal ? (
+        <a
+          href={externalHref ?? detailHref}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group/image relative block h-44 overflow-hidden"
+        >
+          {imageOverlay}
+        </a>
+      ) : (
+        <Link href={detailHref} className="group/image relative block h-44 overflow-hidden">
+          {imageOverlay}
+        </Link>
+      )}
+
       <Link
-        href={`/sites/${tool.id}`}
-        className="flex flex-1 flex-col"
+        href={detailHref}
+        className="relative block space-y-3 px-6 pb-6 pt-6"
       >
-        <div className="group/image relative h-44 overflow-hidden">
-          <Image
-            src={imageSrc}
-            alt={tool.name}
-            fill
-            sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 25vw"
-            className="object-cover transition-transform duration-300 ease-out group-hover/image:scale-105"
-          />
-          <div className="absolute inset-0 bg-[#0b1120]/0 transition-colors duration-300 ease-out group-hover/image:bg-[#0b1120]/45" />
-          <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-sm font-semibold uppercase tracking-[0.2em] text-white opacity-0 transition-opacity duration-300 group-hover/image:opacity-100">
-            View Details
-          </div>
+        <span className="pointer-events-none absolute right-6 top-3 text-xs font-semibold text-[#7f7f88] opacity-0 transition duration-200 group-hover:translate-x-1 group-hover:opacity-100">
+          Details →
+        </span>
+        <div className="flex items-center gap-2 text-lg font-semibold text-[#1f1f24]">
+          {isFeatured ? (
+            <Star className="h-4 w-4 text-[#ff7d68]" aria-hidden="true" />
+          ) : (
+            <span role="img" aria-label="bookmark" className="text-base">
+              🔖
+            </span>
+          )}
+          {tool.name}
         </div>
-        <div className="relative space-y-3 px-6 pb-6 pt-6">
-          <span className="pointer-events-none absolute right-6 top-6 text-xs font-semibold text-[#7f7f88] opacity-0 transition duration-200 group-hover:translate-x-1 group-hover:opacity-100">
-            Details →
-          </span>
-          <div className="flex items-center gap-2 text-lg font-semibold text-[#1f1f24]">
-            {isFeatured ? (
-              <Star className="h-4 w-4 text-[#ff7d68]" aria-hidden="true" />
-            ) : (
-              <span role="img" aria-label="bookmark" className="text-base">
-                🔖
-              </span>
-            )}
-            {tool.name}
-          </div>
-          <p
-            className="line-clamp-2 text-sm leading-relaxed text-[#5a5a63]"
-            title={tool.description}
-          >
-            {tool.description}
-          </p>
-        </div>
+        <p
+          className="line-clamp-2 text-sm leading-relaxed text-[#5a5a63]"
+          title={tool.description}
+        >
+          {tool.description}
+        </p>
       </Link>
+
       {hasLabels && (
         <div className="flex flex-wrap gap-2 px-6 pb-6 text-xs font-medium text-[#616168]">
           {labels.map((label) => (
@@ -162,7 +182,9 @@ export default async function Home() {
       key: `category-${section.categoryId}`,
       title: section.categoryName,
       tools: section.tools,
-      ctaHref: `/category/${section.categorySlug}`,
+      ctaHref: section.categorySlug
+        ? `/category/${section.categorySlug}`
+        : `/category?category=${encodeURIComponent(section.categoryName)}`,
       isFeatured: false,
     }));
 
@@ -239,7 +261,7 @@ export default async function Home() {
                   <div className="mt-10 grid gap-7 md:grid-cols-2 xl:grid-cols-4">
                     {toolsToRender.map((tool) => (
                       <ToolCard
-                        key={`${section.key}-${tool.id}`}
+                        key={`${section.key}-${tool.slug}`}
                         tool={tool}
                         isFeatured={section.isFeatured}
                       />

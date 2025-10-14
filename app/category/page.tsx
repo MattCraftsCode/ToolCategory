@@ -18,9 +18,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { DEFAULT_CATEGORIES, DEFAULT_TAGS } from "@/lib/fallback-data";
-import { slugify } from "@/lib/utils";
+import { normalizeExternalUrl, slugify } from "@/lib/utils";
 
-type CategoryTool = {
+type RawCategoryTool = {
   name: string;
   description: string;
   category: string;
@@ -28,6 +28,11 @@ type CategoryTool = {
   tags: string[];
   featured?: boolean;
   addedAt: string;
+};
+
+type CategoryTool = RawCategoryTool & {
+  slug: string;
+  link: string | null;
 };
 
 type CategoryOption = {
@@ -40,7 +45,7 @@ const defaultCategoryOptions: CategoryOption[] = DEFAULT_CATEGORIES.map((name) =
   slug: slugify(name),
 }));
 
-const categoryTools: CategoryTool[] = [
+const rawCategoryTools: RawCategoryTool[] = [
   {
     name: "Photo Enhancer",
     description:
@@ -136,6 +141,15 @@ const categoryTools: CategoryTool[] = [
   },
 ];
 
+const categoryTools: CategoryTool[] = rawCategoryTools.map((tool) => {
+  const slug = slugify(tool.name);
+  return {
+    ...tool,
+    slug,
+    link: `https://${slug}.toolcategory.com`,
+  };
+});
+
 const PAGE_SIZE = 8;
 
 const filterItems = [
@@ -154,9 +168,17 @@ type FilterOption = (typeof filterItems)[number]["value"];
 type SortOption = (typeof sortItems)[number]["value"];
 
 function CategoryToolCard({ tool }: { tool: CategoryTool }) {
+  const detailHref = `/sites/${tool.slug}`;
+  const websiteHref = normalizeExternalUrl(tool.link) ?? detailHref;
+
   return (
-    <article className="group flex h-full cursor-pointer flex-col overflow-hidden rounded-[18px] border border-[#f0efef] bg-white shadow-[0_26px_50px_-40px_rgba(23,23,31,0.55)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_36px_80px_-48px_rgba(23,23,31,0.55)]">
-      <div className="group/image relative h-48 w-full overflow-hidden">
+    <article className="group flex h-full flex-col overflow-hidden rounded-[18px] border border-[#f0efef] bg-white shadow-[0_26px_50px_-40px_rgba(23,23,31,0.35)] transition hover:-translate-y-1">
+      <a
+        href={websiteHref}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="group/image relative block h-48 w-full overflow-hidden"
+      >
         <Image
           src={tool.image}
           alt={tool.name}
@@ -172,13 +194,13 @@ function CategoryToolCard({ tool }: { tool: CategoryTool }) {
             Featured
           </span>
         ) : null}
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-[#0d0f1a]/0 text-sm font-semibold uppercase tracking-[0.5em] text-white transition duration-300 group-hover/image:bg-[#0d0f1a]/45 group-hover/image:text-white">
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-[#0d0f1a]/0 text-sm font-semibold uppercase tracking-[0.5em] text-white transition duration-300 group-hover/image:bg-[#0d0f1a]/45">
           <span className="opacity-0 transition duration-300 group-hover/image:opacity-100">
             VIEW DETAIL
           </span>
         </div>
-      </div>
-      <div className="relative flex flex-1 flex-col gap-4 px-6 py-6">
+      </a>
+      <Link href={detailHref} className="relative flex flex-1 flex-col gap-4 px-6 py-6">
         <span className="pointer-events-none absolute right-6 top-4 text-xs font-semibold text-[#7f7f88] opacity-0 transition duration-200 group-hover:translate-x-1 group-hover:opacity-100">
           Details →
         </span>
@@ -200,7 +222,7 @@ function CategoryToolCard({ tool }: { tool: CategoryTool }) {
             </span>
           ))}
         </div>
-      </div>
+      </Link>
     </article>
   );
 }
@@ -546,7 +568,7 @@ const filteredTools = useMemo(() => {
             <>
               <div className="mt-10 grid w-full gap-7 md:grid-cols-2 xl:grid-cols-4">
                 {visibleTools.map((tool) => (
-                  <CategoryToolCard key={tool.name} tool={tool} />
+                  <CategoryToolCard key={tool.slug} tool={tool} />
                 ))}
               </div>
               {visibleCount < filteredTools.length ? (

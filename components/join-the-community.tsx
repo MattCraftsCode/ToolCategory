@@ -1,3 +1,9 @@
+"use client";
+
+import { FormEvent } from "react";
+
+import { toast } from "react-toastify";
+
 import { cn } from "@/lib/utils";
 
 type JoinTheCommunityProps = {
@@ -6,6 +12,21 @@ type JoinTheCommunityProps = {
 
 // Renders the shared newsletter CTA used across detail and marketing pages.
 export function JoinTheCommunity({ className }: JoinTheCommunityProps) {
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+    const email = String(formData.get("email") ?? "").trim();
+
+    if (!email) {
+      toast.error("Add your email so we know where to send the good news.");
+      return;
+    }
+
+    toast.success("Thanks for subscribing! We'll tip you off as soon as fresh tools arrive.");
+    form.reset();
+  };
+
   return (
     <section
       className={cn(
@@ -23,9 +44,13 @@ export function JoinTheCommunity({ className }: JoinTheCommunityProps) {
         <p className="mt-3 text-sm text-[#6f6f78]">
           Subscribe to our newsletter for the latest news and updates.
         </p>
-        <form className="mx-auto mt-8 flex max-w-xl items-center rounded-full bg-white pr-2">
+        <form
+          className="mx-auto mt-8 flex max-w-xl items-center rounded-full bg-white pr-2"
+          onSubmit={handleSubmit}
+        >
           <input
             type="email"
+            name="email"
             placeholder="Enter your email"
             className="h-14 w-full rounded-full px-6 text-sm text-[#2c2c32] placeholder:text-[#a7a7af] focus:outline-none"
             aria-label="Email address"

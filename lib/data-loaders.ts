@@ -1,8 +1,8 @@
-import { asc, desc, eq, inArray } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, ne } from "drizzle-orm";
 import { cache } from "react";
 
 import { db } from "@/lib/db";
-import { categories, siteCategories, siteTags, sites, tags } from "@/lib/db/schema";
+import { categories, siteCategories, siteTags, sites, tags, users } from "@/lib/db/schema";
 import { DEFAULT_CATEGORIES, DEFAULT_TAGS } from "@/lib/fallback-data";
 import { slugify } from "@/lib/utils";
 
@@ -87,11 +87,13 @@ const HOMEPAGE_SECTION_SIZE = 8;
 type SiteRow = {
   id: number;
   name: string;
+  slug: string;
   description: string | null;
   introduction: string | null;
   image: string | null;
   link: string | null;
   createdAt: Date | null;
+  userId: string | null;
 };
 
 type SiteSection = {
@@ -107,6 +109,7 @@ type SiteTagMap = Record<number, NamedSlug[]>;
 export type HomePageTool = {
   id: number;
   name: string;
+  slug: string;
   description: string;
   image: string | null;
   link: string | null;
@@ -150,6 +153,30 @@ function addToMap(
   const list = map[siteId] ?? (map[siteId] = []);
   if (!list.some((existing) => existing.slug === item.slug)) {
     list.push(item);
+  }
+}
+
+function extractHostLabel(link: string | null): { label: string; title: string } {
+  if (!link) {
+    return { label: "toolcategory.com", title: "ToolCategory" };
+  }
+
+  const normalize = (value: string) =>
+    value
+      .split(".")
+      .filter(Boolean)
+      .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
+      .join(" ");
+
+  try {
+    const url = new URL(link.startsWith("http") ? link : `https://${link}`);
+    const hostname = url.hostname.replace(/^www\./i, "");
+    return {
+      label: hostname || link,
+      title: normalize(hostname || link),
+    };
+  } catch {
+    return { label: link, title: normalize(link) };
   }
 }
 
@@ -212,6 +239,7 @@ function mapSite(
   return {
     id: row.id,
     name: row.name,
+    slug: row.slug,
     description: resolveDescription(row),
     image: row.image?.trim() ?? null,
     link: row.link?.trim() ?? null,
@@ -225,16 +253,19 @@ function normalizeSiteRows(rows: Partial<SiteRow>[]): SiteRow[] {
   return rows
     .filter((row): row is SiteRow =>
       typeof row.id === "number" &&
-      typeof row.name === "string"
+      typeof row.name === "string" &&
+      typeof row.slug === "string"
     )
     .map((row) => ({
       id: row.id,
       name: row.name,
+      slug: row.slug,
       description: row.description ?? null,
       introduction: row.introduction ?? null,
       image: row.image ?? null,
       link: row.link ?? null,
       createdAt: row.createdAt ?? null,
+      userId: row.userId ?? null,
     }));
 }
 
@@ -252,11 +283,13 @@ function normalizeSectionRows(rows: Partial<SiteSection>[]): SiteSection[] {
       site: {
         id: row.site.id,
         name: row.site.name,
+        slug: row.site.slug,
         description: row.site.description ?? null,
         introduction: row.site.introduction ?? null,
         image: row.site.image ?? null,
         link: row.site.link ?? null,
         createdAt: row.site.createdAt ?? null,
+        userId: null,
       },
     }));
 }
@@ -264,11 +297,13 @@ function normalizeSectionRows(rows: Partial<SiteSection>[]): SiteSection[] {
 const SITE_BASE_SELECTION = {
   id: sites.id,
   name: sites.name,
+  slug: sites.slug,
   description: sites.description,
   introduction: sites.introduction,
   image: sites.image,
   link: sites.link,
   createdAt: sites.createdAt,
+  userId: sites.userId,
 } satisfies Record<string, unknown>;
 
 export const getHomePageSections = cache(async (): Promise<HomePageSections> => {
@@ -394,14 +429,18 @@ export type SiteDetail = {
   createdAt: Date | null;
   categories: NamedSlug[];
   tags: NamedSlug[];
+  publisherName: string;
+  publisherAvatar: string | null;
+  websiteLabel: string;
+  related: HomePageTool[];
 };
 
-export const getSiteDetail = cache(async (siteId: number): Promise<SiteDetail | null> => {
+export const getSiteDetail = cache(async (slug: string): Promise<SiteDetail | null> => {
   try {
     const rows = await db
       .select(SITE_BASE_SELECTION)
       .from(sites)
-      .where(eq(sites.id, siteId))
+      .where(eq(sites.slug, slug))
       .limit(1);
 
     const normalized = normalizeSiteRows(rows as Partial<SiteRow>[]);
@@ -411,7 +450,88 @@ export const getSiteDetail = cache(async (siteId: number): Promise<SiteDetail | 
       return null;
     }
 
-    const { categoriesMap, tagsMap } = await loadSiteMetadata([siteId]);
+    const siteId = site.id;
+
+    const categoryLinks = await db
+      .select({ categoryId: siteCategories.categoryId })
+      .from(siteCategories)
+      .where(eq(siteCategories.siteId, siteId));
+
+    const categoryIds = Array.from(
+      new Set(
+        categoryLinks
+          .map((entry) => entry.categoryId)
+          .filter((value): value is number => typeof value === "number"),
+      ),
+    );
+
+    const relatedSiteRows: SiteRow[] = [];
+
+    if (categoryIds.length > 0) {
+      const relatedRaw = await db
+        .select({ site: SITE_BASE_SELECTION })
+        .from(siteCategories)
+        .innerJoin(sites, eq(siteCategories.siteId, sites.id))
+        .where(
+          and(
+            inArray(siteCategories.categoryId, categoryIds),
+            ne(siteCategories.siteId, siteId),
+          ),
+        )
+        .orderBy(asc(sites.createdAt))
+        .limit(12);
+
+      const normalizedRelated = normalizeSiteRows(
+        relatedRaw.map((entry) => entry.site as Partial<SiteRow>),
+      );
+
+      const seen = new Set<number>();
+      for (const row of normalizedRelated) {
+        if (seen.has(row.id)) {
+          continue;
+        }
+        seen.add(row.id);
+        relatedSiteRows.push(row);
+        if (relatedSiteRows.length === 3) {
+          break;
+        }
+      }
+    }
+
+    const metadataSiteIds = [siteId, ...relatedSiteRows.map((row) => row.id)];
+    const { categoriesMap, tagsMap } = await loadSiteMetadata(metadataSiteIds);
+
+    let publisherName = "ToolCategory";
+    let publisherAvatar: string | null = null;
+
+    if (site.userId) {
+      const publisherRows = await db
+        .select({ name: users.name, image: users.image })
+        .from(users)
+        .where(eq(users.id, site.userId))
+        .limit(1);
+
+      const publisher = publisherRows[0];
+      if (publisher?.name) {
+        publisherName = publisher.name;
+      }
+      if (publisher?.image) {
+        publisherAvatar = publisher.image;
+      }
+    }
+
+    if (!site.userId || publisherName === "ToolCategory") {
+      const hostMeta = extractHostLabel(site.link);
+      if (hostMeta.title.trim().length > 0) {
+        publisherName = hostMeta.title;
+      }
+    }
+
+    const related = relatedSiteRows.map((row) =>
+      mapSite(row, categoriesMap, tagsMap),
+    );
+
+    const hostInfo = extractHostLabel(site.link);
 
     return {
       id: site.id,
@@ -423,6 +543,10 @@ export const getSiteDetail = cache(async (siteId: number): Promise<SiteDetail | 
       createdAt: site.createdAt,
       categories: categoriesMap[siteId] ?? [],
       tags: tagsMap[siteId] ?? [],
+      publisherName,
+      publisherAvatar,
+      websiteLabel: hostInfo.label,
+      related,
     };
   } catch (error) {
     logError("getSiteDetail", error);
