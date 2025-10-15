@@ -2,9 +2,14 @@
 
 import { useMemo, useRef, useState } from "react";
 
+import { cn } from "@/lib/utils";
+
 type MarkdownEditorProps = {
+  value?: string;
+  defaultValue?: string;
   placeholder?: string;
   onChange?: (value: string) => void;
+  className?: string;
 };
 
 type Command =
@@ -25,11 +30,27 @@ const commands: Command[] = [
   { key: "help", icon: "fa-solid fa-circle-question", action: "noop" },
 ];
 
-export function MarkdownEditor({ placeholder, onChange }: MarkdownEditorProps) {
-  const [value, setValue] = useState("");
+export function MarkdownEditor({
+  value,
+  defaultValue = "",
+  placeholder,
+  onChange,
+  className,
+}: MarkdownEditorProps) {
+  const isControlled = typeof value === "string";
+  const [uncontrolledValue, setUncontrolledValue] = useState(defaultValue);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   const grouped = useMemo(() => commands, []);
+
+  const currentValue = isControlled ? value ?? "" : uncontrolledValue;
+
+  const setNextValue = (next: string) => {
+    if (!isControlled) {
+      setUncontrolledValue(next);
+    }
+    onChange?.(next);
+  };
 
   const applyMarkup = (command: Command) => {
     if ("action" in command) {
@@ -42,15 +63,14 @@ export function MarkdownEditor({ placeholder, onChange }: MarkdownEditorProps) {
     const { prefix, suffix } = command;
     const textarea = textareaRef.current;
     if (!textarea) return;
-    const { selectionStart, selectionEnd, value: currentValue } = textarea;
-    const selected = currentValue.slice(selectionStart, selectionEnd);
+    const { selectionStart, selectionEnd, value: textAreaValue } = textarea;
+    const selected = textAreaValue.slice(selectionStart, selectionEnd);
     const next =
-      currentValue.slice(0, selectionStart) +
+      textAreaValue.slice(0, selectionStart) +
       `${prefix}${selected}${suffix}` +
-      currentValue.slice(selectionEnd);
+      textAreaValue.slice(selectionEnd);
     const cursorPosition = selectionStart + prefix.length + selected.length + suffix.length;
-    setValue(next);
-    onChange?.(next);
+    setNextValue(next);
     requestAnimationFrame(() => {
       textarea.focus();
       textarea.setSelectionRange(cursorPosition, cursorPosition);
@@ -58,7 +78,7 @@ export function MarkdownEditor({ placeholder, onChange }: MarkdownEditorProps) {
   };
 
   return (
-    <div className="rounded-[10px] border border-[#e0e0e6] bg-white">
+    <div className={cn("rounded-[10px] border border-[#e0e0e6] bg-white", className)}>
       <div className="flex flex-wrap items-center gap-1 border-b border-[#ededf0] px-4 py-3 text-xs font-semibold text-[#7a7a87]">
         {grouped.map((command) => (
           <button
@@ -74,10 +94,9 @@ export function MarkdownEditor({ placeholder, onChange }: MarkdownEditorProps) {
       </div>
       <textarea
         ref={textareaRef}
-        value={value}
+        value={currentValue}
         onChange={(event) => {
-          setValue(event.target.value);
-          onChange?.(event.target.value);
+          setNextValue(event.target.value);
         }}
         placeholder={placeholder}
         rows={8}

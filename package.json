@@ -13,6 +13,7 @@
     "db:migrate-names": "tsx scripts/migrate-table-names.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.744.0",
     "@auth/drizzle-adapter": "^1.11.0",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-dropdown-menu": "^2.1.6",

@@ -14,11 +14,13 @@ create table public.accounts (
   constraint accounts_userId_users_id_fk foreign KEY ("userId") references users (id) on delete CASCADE
 ) TABLESPACE pg_default;
 
+
 create table public.categories (
   id bigserial not null,
   name character varying(100) not null,
   created_at timestamp with time zone null default now(),
   updated_at timestamp with time zone null default now(),
+  slug character varying null,
   constraint categories_pkey primary key (id)
 ) TABLESPACE pg_default;
 
@@ -34,17 +36,14 @@ create table public.friend_links (
   constraint friend_links_pkey primary key (id)
 ) TABLESPACE pg_default;
 
-create table public.friend_links (
-  id bigserial not null,
-  site_name character varying(100) null,
-  site_url character varying(512) null,
-  image_url character varying(512) null,
-  code text null,
-  status smallint null default 1,
-  created_at timestamp with time zone null default now(),
-  updated_at timestamp with time zone null default now(),
-  constraint friend_links_pkey primary key (id)
+create table public.sessions (
+  "sessionToken" text not null,
+  "userId" text not null,
+  expires timestamp without time zone not null,
+  constraint session_pkey primary key ("sessionToken"),
+  constraint sessions_userId_users_id_fk foreign KEY ("userId") references users (id) on delete CASCADE
 ) TABLESPACE pg_default;
+
 
 create table public.site_categories (
   id bigserial not null,
@@ -55,6 +54,7 @@ create table public.site_categories (
   constraint site_categories_pkey primary key (id)
 ) TABLESPACE pg_default;
 
+
 create table public.site_tags (
   id bigserial not null,
   tag_id bigint null,
@@ -63,6 +63,7 @@ create table public.site_tags (
   updated_at timestamp with time zone null default now(),
   constraint site_tags_pkey primary key (id)
 ) TABLESPACE pg_default;
+
 
 create table public.sites (
   id bigserial not null,
@@ -73,6 +74,9 @@ create table public.sites (
   created_at timestamp with time zone null default now(),
   updated_at timestamp with time zone null default now(),
   description text null,
+  is_featured boolean null,
+  user_id bigint null,
+  slug character varying null,
   constraint sites_pkey primary key (id)
 ) TABLESPACE pg_default;
 
@@ -83,13 +87,16 @@ create table public.subscriptions (
   constraint subscriptions_pkey primary key (id)
 ) TABLESPACE pg_default;
 
+
 create table public.tags (
   id bigserial not null,
   name character varying(100) not null,
   created_at timestamp with time zone null default now(),
   updated_at timestamp with time zone null default now(),
+  slug character varying null,
   constraint tags_pkey primary key (id)
 ) TABLESPACE pg_default;
+
 
 create table public.users (
   id text not null,
