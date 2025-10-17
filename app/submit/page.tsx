@@ -1,6 +1,7 @@
 "use client";
 
 import NextImage from "next/image";
+import { useRouter } from "next/navigation";
 import { ArrowUp, Image as ImageIcon, Loader2, Wand2 } from "lucide-react";
 import {
   ChangeEvent,
@@ -58,6 +59,8 @@ export default function SubmitPage() {
   const [isDraggingImage, setIsDraggingImage] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<SubmitErrors>({});
+
+  const router = useRouter();
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const previewUrlRef = useRef<string | null>(null);
@@ -418,12 +421,18 @@ export default function SubmitPage() {
         });
 
         const result = (await response.json().catch(() => null)) as
-          | { success?: boolean; error?: string }
+          | {
+              success?: boolean;
+              error?: string;
+              site?: { id: number; slug: string; uuid: string };
+            }
           | null;
 
-        if (!response.ok || !result?.success) {
+        if (!response.ok || !result?.success || !result.site?.uuid) {
           throw new Error(result?.error ?? "We couldn’t submit your product. Please try again.");
         }
+
+        const targetUuid = result.site.uuid;
 
         toast.success("Thanks! We received your submission.");
 
@@ -435,6 +444,8 @@ export default function SubmitPage() {
         setIntroduction("");
         clearImage();
         setErrors({});
+
+        router.push(`/payment/${targetUuid}`);
       } catch (error) {
         if (process.env.NODE_ENV !== "production") {
           console.error("[submit] submission failed", error);
@@ -458,6 +469,7 @@ export default function SubmitPage() {
       name,
       selectedCategories,
       selectedTags,
+      router,
       setErrors,
     ],
   );

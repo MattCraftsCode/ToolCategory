@@ -66,7 +66,13 @@ function getFallbackImage(seed: number): string {
   return imageGallery[index];
 }
 
-function ToolCard({ tool, isFeatured }: { tool: HomePageTool; isFeatured?: boolean }) {
+function ToolCard({
+  tool,
+  isFeatured,
+}: {
+  tool: HomePageTool;
+  isFeatured?: boolean;
+}) {
   const imageSrc = tool.image ?? getFallbackImage(tool.id);
   const isTagList = tool.tags.length > 0;
   const labels = isTagList ? tool.tags : tool.categories;
@@ -103,7 +109,10 @@ function ToolCard({ tool, isFeatured }: { tool: HomePageTool; isFeatured?: boole
           {imageOverlay}
         </a>
       ) : (
-        <Link href={detailHref} className="group/image relative block h-44 overflow-hidden">
+        <Link
+          href={detailHref}
+          className="group/image relative block h-44 overflow-hidden"
+        >
           {imageOverlay}
         </Link>
       )}
@@ -138,7 +147,9 @@ function ToolCard({ tool, isFeatured }: { tool: HomePageTool; isFeatured?: boole
           {labels.map((label) => (
             <Link
               key={`${tool.id}-${label.slug}`}
-              href={isTagList ? `/tag/${label.slug}` : `/category/${label.slug}`}
+              href={
+                isTagList ? `/tag/${label.slug}` : `/category/${label.slug}`
+              }
               className="group/tag relative inline-flex items-center gap-1.5 rounded-full bg-[#f3f4f9] px-3 py-1 text-[11px] uppercase tracking-wide text-[#616168] transition-colors duration-200 hover:bg-[#ffe8e2]"
             >
               <span className="text-[#ff7d68] transition-transform duration-200 group-hover/tag:scale-125">
@@ -212,13 +223,13 @@ export default async function Home() {
               <span className="text-base">→</span>
             </Link>
             <h1 className="max-w-5xl text-4xl font-semibold tracking-tight text-[#17171c] sm:text-[3.35rem] sm:leading-[1.08]">
-              Find <span className="text-[#1f1f1f]">Tools.</span> Explore
-              <span className="text-[#ff7d68]"> Categories.</span>
+              Explore, <span className="text-[#1f1f1f]">Choose, and</span>
+              <span className="text-[#ff7d68]"> Get Things Done!</span>
             </h1>
             <p className="max-w-4xl text-base text-[#63636a] sm:text-lg">
-              ToolCategory.com helps you discover, organize, and showcase the best digital tools.
-              Browse curated collections, follow the latest launches, and submit your product to
-              reach more makers.
+              ToolCategory.com helps you discover, organize, and showcase the
+              best digital tools. Browse curated collections, follow the latest
+              launches, and submit your product to reach more makers.
             </p>
             <div className="mt-2 flex h-14 w-full max-w-5xl items-center rounded-full border border-[#f0efef] bg-white px-4 transition-all duration-300 hover:border-[#ff7d68]/40 hover:shadow-[0_0_0_2px_rgba(255,125,104,0.08)] focus-within:border-[#ff7d68]/70 focus-within:shadow-[0_0_0_2px_rgba(255,125,104,0.15)]">
               <input
@@ -236,9 +247,7 @@ export default async function Home() {
 
           {toolSections.map((section, index) => {
             const hasTools = section.tools.length > 0;
-            const toolsToRender = hasTools
-              ? section.tools.slice(0, 8)
-              : [];
+            const toolsToRender = hasTools ? section.tools.slice(0, 8) : [];
 
             return (
               <section
@@ -275,7 +284,6 @@ export default async function Home() {
               </section>
             );
           })}
-
         </main>
       </div>
 

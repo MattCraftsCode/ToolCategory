@@ -1,3 +1,5 @@
+"use client";
+
 import { ArrowRight, Check, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -89,12 +91,16 @@ type PricingPlansProps = {
   plans?: PlanDefinition[];
   className?: string;
   buttonLabel?: string;
+  onPlanSelect?: (plan: PlanDefinition) => void;
+  processingPlanName?: string | null;
 };
 
 export function PricingPlans({
   plans = DEFAULT_PLANS,
   className,
   buttonLabel = "Go Submit",
+  onPlanSelect,
+  processingPlanName,
 }: PricingPlansProps) {
   return (
     <div className={cn("grid gap-6 lg:grid-cols-3", className)}>
@@ -159,8 +165,13 @@ export function PricingPlans({
               ))}
             </ul>
 
-            <Button type="button" className={plan.buttonClass}>
-              {buttonLabel}
+            <Button
+              type="button"
+              className={plan.buttonClass}
+              onClick={() => onPlanSelect?.(plan)}
+              disabled={processingPlanName === plan.name}
+            >
+              {processingPlanName === plan.name ? "Redirecting…" : buttonLabel}
               <ArrowRight className="h-4 w-4" />
             </Button>
           </div>

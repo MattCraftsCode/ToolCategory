@@ -9,6 +9,8 @@ import {
   bigserial,
   bigint,
   varchar,
+  uuid,
+  numeric,
 } from "drizzle-orm/pg-core";
 import type { AdapterAccount } from "next-auth/adapters";
 
@@ -19,6 +21,7 @@ export const users = pgTable("users", {
   name: text("name"),
   email: text("email").notNull().unique(),
   emailVerified: timestamp("emailVerified", { mode: "date" }),
+  userType: text("user_type").notNull().default("free"),
   image: text("image"),
 });
 
@@ -82,6 +85,7 @@ export const tags = pgTable("tags", {
 
 export const sites = pgTable("sites", {
   id: bigserial("id", { mode: "number" }).primaryKey(),
+  uuid: uuid("uuid").defaultRandom(),
   name: varchar("name", { length: 100 }).notNull(),
   slug: varchar("slug", { length: 120 }).notNull().unique(),
   introduction: text("introduction"),
@@ -92,6 +96,22 @@ export const sites = pgTable("sites", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
   description: text("description"),
   isFeatured: boolean("is_featured").notNull().default(false),
+  isVerified: integer("is_verified").notNull().default(0),
+  publishedAt: timestamp("published_at", { withTimezone: true }),
+});
+
+export const orders = pgTable("orders", {
+  id: bigserial("id", { mode: "number" }).primaryKey(),
+  userId: text("user_id").notNull(),
+  plan: text("plan").notNull(),
+  amount: numeric("amount", { precision: 10, scale: 2 }).notNull(),
+  currency: varchar("currency", { length: 3 }).notNull().default("USD"),
+  paypalOrderId: text("paypal_order_id").notNull().unique(),
+  paypalCaptureId: text("paypal_capture_id"),
+  status: text("status").notNull().default("CREATED"),
+  siteUuid: uuid("site_uuid"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
 export const subscriptions = pgTable("subscriptions", {

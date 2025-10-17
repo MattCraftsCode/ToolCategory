@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { ArrowDown, ArrowUp } from "lucide-react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { toast } from "react-toastify";
 
-import { PricingPlans } from "@/components/PricingPlans";
+import { PricingPlans, type PlanDefinition } from "@/components/PricingPlans";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { cn } from "@/lib/utils";
@@ -80,6 +82,108 @@ const faqs: FAQItem[] = [
 
 export default function PricingPage() {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
+  const [processingPlan, setProcessingPlan] = useState<string | null>(null);
+  const [captureStatus, setCaptureStatus] = useState<string | null>(null);
+  const [isCapturingOrder, setIsCapturingOrder] = useState(false);
+  const hasCapturedRef = useRef(false);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+
+  const initiatePayPalCheckout = useCallback(async (planName: string) => {
+    try {
+      setProcessingPlan(planName);
+
+      const response = await fetch("/api/payments/paypal/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan: planName }),
+      });
+
+      const result = (await response.json().catch(() => null)) as
+        | { approvalUrl?: string; error?: string }
+        | null;
+
+      if (!response.ok || !result?.approvalUrl) {
+        throw new Error(result?.error ?? "Failed to start PayPal checkout.");
+      }
+
+      window.location.href = result.approvalUrl;
+    } catch (error) {
+      console.error("[paypal] pricing checkout start failed", error);
+      toast.error(
+        error instanceof Error ? error.message : "Unable to redirect to PayPal checkout."
+      );
+      setProcessingPlan(null);
+    }
+  }, []);
+
+  const handlePlanSelect = useCallback(
+    (plan: PlanDefinition) => {
+      const planName = plan.name.trim().toLowerCase();
+
+      if (planName === "free") {
+        router.push("/submit");
+        return;
+      }
+
+      void initiatePayPalCheckout(plan.name);
+    },
+    [initiatePayPalCheckout, router]
+  );
+
+  useEffect(() => {
+    const paypalStatus = searchParams.get("paypal");
+    const orderToken = searchParams.get("token");
+
+    if (paypalStatus === "cancel") {
+      toast.info("PayPal checkout was cancelled.");
+      router.replace(pathname);
+      return;
+    }
+
+    if (paypalStatus === "return" && orderToken && !hasCapturedRef.current) {
+      hasCapturedRef.current = true;
+      setIsCapturingOrder(true);
+
+      (async () => {
+        try {
+          const response = await fetch("/api/payments/paypal/capture", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ orderId: orderToken }),
+          });
+
+          const result = (await response.json().catch(() => null)) as
+            | { success?: boolean; status?: string; plan?: string; error?: string }
+            | null;
+
+          if (!response.ok || !result) {
+            throw new Error(result?.error ?? "Unable to finalize PayPal payment.");
+          }
+
+          const status = result.status ?? (result.success ? "COMPLETED" : "UNKNOWN");
+          setCaptureStatus(`PayPal payment status: ${status}`);
+
+          if (result.success) {
+            const planLabel = result.plan === "pro" ? "Pro" : "Basic";
+            toast.success(`Payment completed for the ${planLabel} plan.`);
+          } else {
+            toast.info(`PayPal returned status ${status}.`);
+          }
+        } catch (error) {
+          console.error("[paypal] capture failed", error);
+          toast.error(
+            error instanceof Error ? error.message : "Unable to finalize PayPal payment."
+          );
+        } finally {
+          setIsCapturingOrder(false);
+          setProcessingPlan(null);
+          router.replace(pathname);
+        }
+      })();
+    }
+  }, [pathname, router, searchParams]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white via-[#fff8f5] to-white text-[#1f1f24]">
@@ -96,7 +200,15 @@ export default function PricingPage() {
         </div>
 
         <section aria-label="Pricing plans">
-          <PricingPlans />
+          {(isCapturingOrder || captureStatus) && (
+            <div className="mb-8 rounded-[16px] border border-[#d9e8ff] bg-[#f3f8ff] px-5 py-4 text-sm text-[#2b4c73]">
+              {isCapturingOrder ? "Finalizing your PayPal payment..." : captureStatus}
+            </div>
+          )}
+          <PricingPlans
+            onPlanSelect={handlePlanSelect}
+            processingPlanName={processingPlan}
+          />
         </section>
 
         <section className="mt-20 rounded-[32px] border border-[#f0f0f3] bg-white px-8 py-12">

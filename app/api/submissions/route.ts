@@ -107,10 +107,10 @@ export async function POST(request: Request) {
   }
 
   const session = await auth();
-  const userId = session?.user?.id ?? null;
+  const rawUserId = session?.user?.id;
   const siteUserId =
-    userId && Number.isFinite(Number(userId)) && Number(userId) > 0
-      ? Number(userId)
+    typeof rawUserId === "string" && rawUserId.trim().length > 0
+      ? rawUserId.trim()
       : null;
 
   try {
@@ -131,7 +131,7 @@ export async function POST(request: Request) {
           link: normalizedLinkValue,
           userId: siteUserId,
         })
-        .returning({ id: sites.id, slug: sites.slug });
+        .returning({ id: sites.id, slug: sites.slug, uuid: sites.uuid });
 
       const categoryRecords = [] as Array<{ id: number; slug: string; name: string }>;
 

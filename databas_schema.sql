@@ -75,8 +75,11 @@ create table public.sites (
   updated_at timestamp with time zone null default now(),
   description text null,
   is_featured boolean null,
-  user_id bigint null,
+  user_id text null,
   slug character varying null,
+  uuid uuid null default gen_random_uuid (),
+  is_verified integer null default 0,
+  published_at timestamp with time zone null,
   constraint sites_pkey primary key (id)
 ) TABLESPACE pg_default;
 
@@ -103,6 +106,7 @@ create table public.users (
   name text null,
   email text not null,
   "emailVerified" timestamp without time zone null,
+  user_type text null default 'free',
   image text null,
   constraint user_pkey primary key (id),
   constraint user_email_key unique (email)
@@ -113,4 +117,20 @@ create table public.verification_tokens (
   token text not null,
   expires timestamp without time zone not null,
   constraint verification_tokens_identifier_token_pk primary key (identifier, token)
+) TABLESPACE pg_default;
+
+
+create table public.orders (
+  id bigserial not null,
+  user_id text not null,
+  plan text not null,
+  amount numeric(10,2) not null,
+  currency character varying(3) not null default 'USD',
+  paypal_order_id text not null,
+  paypal_capture_id text null,
+  status text not null default 'CREATED',
+  site_uuid uuid null,
+  created_at timestamp with time zone null default now(),
+  updated_at timestamp with time zone null default now(),
+  constraint orders_pkey primary key (id)
 ) TABLESPACE pg_default;

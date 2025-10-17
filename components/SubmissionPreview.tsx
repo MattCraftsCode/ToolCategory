@@ -23,6 +23,7 @@ type SubmissionPreviewProps = {
   className?: string;
   actions?: SubmissionAction[];
   variant?: "default" | "dashboard";
+  statusColor?: string;
 };
 
 export function SubmissionPreview({
@@ -38,6 +39,7 @@ export function SubmissionPreview({
   className,
   actions,
   variant = "default",
+  statusColor,
 }: SubmissionPreviewProps) {
   const hasActions = Boolean(actions?.length);
   const isPublished = status.toLowerCase() === "published";
@@ -82,12 +84,22 @@ export function SubmissionPreview({
 
           <div className="flex flex-col justify-between gap-6">
             <div className="grid gap-x-6 gap-y-3 sm:grid-cols-2">
-              {[{ label: "Plan", value: plan }, { label: "Status", value: status }, { label: "Publish Date", value: publishDate }, { label: "Created Date", value: createdDate }].map(({ label, value }) => (
+              {[
+                { label: "Plan", value: plan },
+                { label: "Status", value: status, style: statusColor ? { color: statusColor } : undefined },
+                { label: "Publish Date", value: publishDate },
+                { label: "Created Date", value: createdDate },
+              ].map(({ label, value, style }) => (
                 <div key={label} className="space-y-2">
                   <span className="text-xs font-semibold uppercase tracking-[0.3em] text-[#a1a1aa]">
                     {label}
                   </span>
-                  <span className="block text-base font-semibold text-[#1f1f24]">{value}</span>
+                  <span
+                    className="block text-base font-semibold text-[#1f1f24]"
+                    style={style}
+                  >
+                    {value}
+                  </span>
                 </div>
               ))}
             </div>

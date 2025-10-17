@@ -2,7 +2,14 @@ import { and, asc, desc, eq, inArray, ne } from "drizzle-orm";
 import { cache } from "react";
 
 import { db } from "@/lib/db";
-import { categories, siteCategories, siteTags, sites, tags, users } from "@/lib/db/schema";
+import {
+  categories,
+  siteCategories,
+  siteTags,
+  sites,
+  tags,
+  users,
+} from "@/lib/db/schema";
 import { slugify } from "@/lib/utils";
 
 const logError = (context: string, error: unknown) => {
@@ -18,7 +25,7 @@ export type NamedSlug = {
 
 const ensureNamedSlug = (
   name: string | null | undefined,
-  slugValue: string | null | undefined,
+  slugValue: string | null | undefined
 ): NamedSlug | null => {
   if (!name) {
     return null;
@@ -28,7 +35,8 @@ const ensureNamedSlug = (
     return null;
   }
   const trimmedSlug = slugValue?.trim();
-  const slug = trimmedSlug && trimmedSlug.length > 0 ? trimmedSlug : slugify(trimmedName);
+  const slug =
+    trimmedSlug && trimmedSlug.length > 0 ? trimmedSlug : slugify(trimmedName);
   return { name: trimmedName, slug };
 };
 
@@ -74,6 +82,7 @@ const HOMEPAGE_SECTION_SIZE = 8;
 
 type SiteRow = {
   id: number;
+  uuid: string;
   name: string;
   slug: string;
   description: string | null;
@@ -83,6 +92,8 @@ type SiteRow = {
   createdAt: Date | null;
   userId: string | null;
   isFeatured: boolean | null;
+  isVerified: number | null;
+  publishedAt: Date | null;
 };
 
 type SiteSection = {
@@ -121,6 +132,20 @@ export type HomePageSections = {
   categories: HomePageCategorySection[];
 };
 
+export type PaymentSite = {
+  id: number;
+  uuid: string;
+  name: string;
+  description: string;
+  image: string | null;
+  link: string | null;
+  createdAt: Date | null;
+  isVerified: boolean;
+  categories: NamedSlug[];
+  tags: NamedSlug[];
+  publishedAt: Date | null;
+};
+
 function resolveDescription(row: SiteRow): string {
   const candidates = [row.description, row.introduction];
   for (const candidate of candidates) {
@@ -135,7 +160,7 @@ function resolveDescription(row: SiteRow): string {
 function addToMap(
   map: Record<number, NamedSlug[]>,
   siteId: number | null | undefined,
-  item: NamedSlug | null,
+  item: NamedSlug | null
 ) {
   if (!siteId || !item) {
     return;
@@ -146,7 +171,10 @@ function addToMap(
   }
 }
 
-function extractHostLabel(link: string | null): { label: string; title: string } {
+function extractHostLabel(link: string | null): {
+  label: string;
+  title: string;
+} {
   if (!link) {
     return { label: "toolcategory.com", title: "ToolCategory" };
   }
@@ -204,7 +232,11 @@ async function loadSiteMetadata(siteIds: number[]): Promise<{
 
     const categoriesMap: SiteCategoryMap = {};
     for (const row of categoryRows) {
-      addToMap(categoriesMap, row.siteId, ensureNamedSlug(row.categoryName, row.categorySlug));
+      addToMap(
+        categoriesMap,
+        row.siteId,
+        ensureNamedSlug(row.categoryName, row.categorySlug)
+      );
     }
 
     const tagsMap: SiteTagMap = {};
@@ -222,7 +254,7 @@ async function loadSiteMetadata(siteIds: number[]): Promise<{
 function mapSite(
   row: SiteRow,
   categoriesMap: SiteCategoryMap,
-  tagsMap: SiteTagMap,
+  tagsMap: SiteTagMap
 ): HomePageTool {
   const categoryList = categoriesMap[row.id] ?? [];
   const tagList = tagsMap[row.id] ?? [];
@@ -242,13 +274,16 @@ function mapSite(
 
 function normalizeSiteRows(rows: Partial<SiteRow>[]): SiteRow[] {
   return rows
-    .filter((row): row is SiteRow =>
-      typeof row.id === "number" &&
-      typeof row.name === "string" &&
-      typeof row.slug === "string"
+    .filter(
+      (row): row is SiteRow =>
+        typeof row.id === "number" &&
+        typeof row.uuid === "string" &&
+        typeof row.name === "string" &&
+        typeof row.slug === "string"
     )
     .map((row) => ({
       id: row.id,
+      uuid: row.uuid,
       name: row.name,
       slug: row.slug,
       description: row.description ?? null,
@@ -256,17 +291,21 @@ function normalizeSiteRows(rows: Partial<SiteRow>[]): SiteRow[] {
       image: row.image ?? null,
       link: row.link ?? null,
       createdAt: row.createdAt ?? null,
-      userId: row.userId ?? null,
+      userId: typeof row.userId === "string" ? row.userId : null,
       isFeatured: row.isFeatured ?? false,
+      isVerified: typeof row.isVerified === "number" ? row.isVerified : null,
+      publishedAt: row.publishedAt ?? null,
     }));
 }
 
 function normalizeSectionRows(rows: Partial<SiteSection>[]): SiteSection[] {
   return rows
-    .filter((row): row is SiteSection =>
-      typeof row.categoryId === "number" &&
-      typeof row.categoryName === "string" &&
-      typeof row.site?.id === "number"
+    .filter(
+      (row): row is SiteSection =>
+        typeof row.categoryId === "number" &&
+        typeof row.categoryName === "string" &&
+        typeof row.site?.id === "number" &&
+        typeof row.site?.uuid === "string"
     )
     .map((row) => ({
       categoryId: row.categoryId,
@@ -274,6 +313,7 @@ function normalizeSectionRows(rows: Partial<SiteSection>[]): SiteSection[] {
       categorySlug: row.categorySlug ?? null,
       site: {
         id: row.site.id,
+        uuid: row.site.uuid,
         name: row.site.name,
         slug: row.site.slug,
         description: row.site.description ?? null,
@@ -281,13 +321,18 @@ function normalizeSectionRows(rows: Partial<SiteSection>[]): SiteSection[] {
         image: row.site.image ?? null,
         link: row.site.link ?? null,
         createdAt: row.site.createdAt ?? null,
-        userId: null,
+        userId: typeof row.site.userId === "string" ? row.site.userId : null,
+        isFeatured: row.site.isFeatured ?? false,
+        isVerified:
+          typeof row.site.isVerified === "number" ? row.site.isVerified : null,
+        publishedAt: row.site.publishedAt ?? null,
       },
     }));
 }
 
 const SITE_BASE_SELECTION = {
   id: sites.id,
+  uuid: sites.uuid,
   name: sites.name,
   slug: sites.slug,
   description: sites.description,
@@ -297,6 +342,8 @@ const SITE_BASE_SELECTION = {
   createdAt: sites.createdAt,
   userId: sites.userId,
   isFeatured: sites.isFeatured,
+  isVerified: sites.isVerified,
+  publishedAt: sites.publishedAt,
 } satisfies Record<string, unknown>;
 
 export const getDiscoveryTools = cache(async (): Promise<HomePageTool[]> => {
@@ -311,127 +358,145 @@ export const getDiscoveryTools = cache(async (): Promise<HomePageTool[]> => {
 
     const { categoriesMap, tagsMap } = await loadSiteMetadata(siteIds);
 
-    return sitesNormalized.map((row) =>
-      mapSite(row, categoriesMap, tagsMap),
-    );
+    return sitesNormalized.map((row) => mapSite(row, categoriesMap, tagsMap));
   } catch (error) {
     logError("getDiscoveryTools", error);
     return [];
   }
 });
 
-export const getHomePageSections = cache(async (): Promise<HomePageSections> => {
-  try {
-    const [featuredRowsRaw, latestRowsRaw] = await Promise.all([
-      db
-        .select(SITE_BASE_SELECTION)
-        .from(sites)
-        .where(eq(sites.isFeatured, true))
-        .orderBy(desc(sites.updatedAt), desc(sites.createdAt))
-        .limit(HOMEPAGE_SECTION_SIZE),
-      db
-        .select(SITE_BASE_SELECTION)
-        .from(sites)
-        .orderBy(desc(sites.createdAt))
-        .limit(HOMEPAGE_SECTION_SIZE),
-    ]);
+export const getHomePageSections = cache(
+  async (): Promise<HomePageSections> => {
+    try {
+      const [featuredRowsRaw, latestRowsRaw] = await Promise.all([
+        db
+          .select(SITE_BASE_SELECTION)
+          .from(sites)
+          .where(eq(sites.isFeatured, true))
+          .orderBy(desc(sites.updatedAt), desc(sites.createdAt))
+          .limit(HOMEPAGE_SECTION_SIZE),
+        db
+          .select(SITE_BASE_SELECTION)
+          .from(sites)
+          .orderBy(desc(sites.createdAt))
+          .limit(HOMEPAGE_SECTION_SIZE),
+      ]);
 
-    const categoriesRaw = await db
-      .select({ id: categories.id, name: categories.name, slug: categories.slug })
-      .from(categories)
-      .orderBy(asc(categories.name));
+      const categoriesRaw = await db
+        .select({
+          id: categories.id,
+          name: categories.name,
+          slug: categories.slug,
+        })
+        .from(categories)
+        .orderBy(asc(categories.name));
 
-    const categorySiteRowsRaw = await db
-      .select({
-        categoryId: siteCategories.categoryId,
-        categoryName: categories.name,
-        categorySlug: categories.slug,
-        site: SITE_BASE_SELECTION,
-      })
-      .from(siteCategories)
-      .innerJoin(sites, eq(siteCategories.siteId, sites.id))
-      .innerJoin(categories, eq(siteCategories.categoryId, categories.id))
-      .orderBy(asc(categories.name), desc(sites.createdAt));
+      const categorySiteRowsRaw = await db
+        .select({
+          categoryId: siteCategories.categoryId,
+          categoryName: categories.name,
+          categorySlug: categories.slug,
+          site: SITE_BASE_SELECTION,
+        })
+        .from(siteCategories)
+        .innerJoin(sites, eq(siteCategories.siteId, sites.id))
+        .innerJoin(categories, eq(siteCategories.categoryId, categories.id))
+        .orderBy(asc(categories.name), desc(sites.createdAt));
 
-    const featuredRows = normalizeSiteRows(featuredRowsRaw);
-    const latestRows = normalizeSiteRows(latestRowsRaw);
-    const categorySiteRows = normalizeSectionRows(categorySiteRowsRaw);
+      const featuredRows = normalizeSiteRows(featuredRowsRaw);
+      const latestRows = normalizeSiteRows(latestRowsRaw);
+      const categorySiteRows = normalizeSectionRows(categorySiteRowsRaw);
 
-    const siteIds = new Set<number>();
+      const siteIds = new Set<number>();
 
-    for (const row of featuredRows) {
-      siteIds.add(row.id);
-    }
-    for (const row of latestRows) {
-      siteIds.add(row.id);
-    }
-    for (const row of categorySiteRows) {
-      siteIds.add(row.site.id);
-    }
-
-    const { categoriesMap, tagsMap } = await loadSiteMetadata(Array.from(siteIds));
-
-    const featured = featuredRows.map((row) =>
-      mapSite(row, categoriesMap, tagsMap),
-    );
-    const latest = latestRows.map((row) =>
-      mapSite(row, categoriesMap, tagsMap),
-    );
-
-    const categoryLookup = new Map<number, { name: string; slug: string; tools: SiteRow[] }>();
-    for (const categoryRow of categoriesRaw) {
-      if (typeof categoryRow.id === "number" && typeof categoryRow.name === "string") {
-        const slug = ensureNamedSlug(categoryRow.name, categoryRow.slug)?.slug ?? slugify(categoryRow.name);
-        categoryLookup.set(categoryRow.id, { name: categoryRow.name, slug, tools: [] });
+      for (const row of featuredRows) {
+        siteIds.add(row.id);
       }
-    }
-
-    for (const row of categorySiteRows) {
-      const entry = categoryLookup.get(row.categoryId);
-      if (!entry) {
-        continue;
+      for (const row of latestRows) {
+        siteIds.add(row.id);
+      }
+      for (const row of categorySiteRows) {
+        siteIds.add(row.site.id);
       }
 
-      if (entry.tools.length >= HOMEPAGE_SECTION_SIZE) {
-        continue;
-      }
-
-      entry.tools.push(row.site);
-    }
-
-    const categorySections: HomePageCategorySection[] = [];
-
-    for (const [categoryId, entry] of categoryLookup) {
-      if (entry.tools.length === 0) {
-        continue;
-      }
-
-      const tools = entry.tools.map((tool) =>
-        mapSite(tool, categoriesMap, tagsMap),
+      const { categoriesMap, tagsMap } = await loadSiteMetadata(
+        Array.from(siteIds)
       );
 
-      categorySections.push({
-        categoryId,
-        categoryName: entry.name,
-        categorySlug: entry.slug,
-        tools,
-      });
-    }
+      const featured = featuredRows.map((row) =>
+        mapSite(row, categoriesMap, tagsMap)
+      );
+      const latest = latestRows.map((row) =>
+        mapSite(row, categoriesMap, tagsMap)
+      );
 
-    return {
-      featured,
-      latest,
-      categories: categorySections,
-    };
-  } catch (error) {
-    logError("getHomePageSections", error);
-    return {
-      featured: [],
-      latest: [],
-      categories: [],
-    };
+      const categoryLookup = new Map<
+        number,
+        { name: string; slug: string; tools: SiteRow[] }
+      >();
+      for (const categoryRow of categoriesRaw) {
+        if (
+          typeof categoryRow.id === "number" &&
+          typeof categoryRow.name === "string"
+        ) {
+          const slug =
+            ensureNamedSlug(categoryRow.name, categoryRow.slug)?.slug ??
+            slugify(categoryRow.name);
+          categoryLookup.set(categoryRow.id, {
+            name: categoryRow.name,
+            slug,
+            tools: [],
+          });
+        }
+      }
+
+      for (const row of categorySiteRows) {
+        const entry = categoryLookup.get(row.categoryId);
+        if (!entry) {
+          continue;
+        }
+
+        if (entry.tools.length >= HOMEPAGE_SECTION_SIZE) {
+          continue;
+        }
+
+        entry.tools.push(row.site);
+      }
+
+      const categorySections: HomePageCategorySection[] = [];
+
+      for (const [categoryId, entry] of categoryLookup) {
+        if (entry.tools.length === 0) {
+          continue;
+        }
+
+        const tools = entry.tools.map((tool) =>
+          mapSite(tool, categoriesMap, tagsMap)
+        );
+
+        categorySections.push({
+          categoryId,
+          categoryName: entry.name,
+          categorySlug: entry.slug,
+          tools,
+        });
+      }
+
+      return {
+        featured,
+        latest,
+        categories: categorySections,
+      };
+    } catch (error) {
+      logError("getHomePageSections", error);
+      return {
+        featured: [],
+        latest: [],
+        categories: [],
+      };
+    }
   }
-});
+);
 
 export type SiteDetail = {
   id: number;
@@ -449,121 +514,163 @@ export type SiteDetail = {
   related: HomePageTool[];
 };
 
-export const getSiteDetail = cache(async (slug: string): Promise<SiteDetail | null> => {
-  try {
-    const rows = await db
-      .select(SITE_BASE_SELECTION)
-      .from(sites)
-      .where(eq(sites.slug, slug))
-      .limit(1);
-
-    const normalized = normalizeSiteRows(rows as Partial<SiteRow>[]);
-    const site = normalized[0];
-
-    if (!site) {
-      return null;
-    }
-
-    const siteId = site.id;
-
-    const categoryLinks = await db
-      .select({ categoryId: siteCategories.categoryId })
-      .from(siteCategories)
-      .where(eq(siteCategories.siteId, siteId));
-
-    const categoryIds = Array.from(
-      new Set(
-        categoryLinks
-          .map((entry) => entry.categoryId)
-          .filter((value): value is number => typeof value === "number"),
-      ),
-    );
-
-    const relatedSiteRows: SiteRow[] = [];
-
-    if (categoryIds.length > 0) {
-      const relatedRaw = await db
-        .select({ site: SITE_BASE_SELECTION })
-        .from(siteCategories)
-        .innerJoin(sites, eq(siteCategories.siteId, sites.id))
-        .where(
-          and(
-            inArray(siteCategories.categoryId, categoryIds),
-            ne(siteCategories.siteId, siteId),
-          ),
-        )
-        .orderBy(asc(sites.createdAt))
-        .limit(12);
-
-      const normalizedRelated = normalizeSiteRows(
-        relatedRaw.map((entry) => entry.site as Partial<SiteRow>),
-      );
-
-      const seen = new Set<number>();
-      for (const row of normalizedRelated) {
-        if (seen.has(row.id)) {
-          continue;
-        }
-        seen.add(row.id);
-        relatedSiteRows.push(row);
-        if (relatedSiteRows.length === 3) {
-          break;
-        }
-      }
-    }
-
-    const metadataSiteIds = [siteId, ...relatedSiteRows.map((row) => row.id)];
-    const { categoriesMap, tagsMap } = await loadSiteMetadata(metadataSiteIds);
-
-    let publisherName = "ToolCategory";
-    let publisherAvatar: string | null = null;
-
-    if (site.userId) {
-      const publisherRows = await db
-        .select({ name: users.name, image: users.image })
-        .from(users)
-        .where(eq(users.id, site.userId))
+export const getSiteDetail = cache(
+  async (slug: string): Promise<SiteDetail | null> => {
+    try {
+      const rows = await db
+        .select(SITE_BASE_SELECTION)
+        .from(sites)
+        .where(eq(sites.slug, slug))
         .limit(1);
 
-      const publisher = publisherRows[0];
-      if (publisher?.name) {
-        publisherName = publisher.name;
+      const normalized = normalizeSiteRows(rows as Partial<SiteRow>[]);
+      const site = normalized[0];
+
+      if (!site) {
+        return null;
       }
-      if (publisher?.image) {
-        publisherAvatar = publisher.image;
+
+      const siteId = site.id;
+
+      const categoryLinks = await db
+        .select({ categoryId: siteCategories.categoryId })
+        .from(siteCategories)
+        .where(eq(siteCategories.siteId, siteId));
+
+      const categoryIds = Array.from(
+        new Set(
+          categoryLinks
+            .map((entry) => entry.categoryId)
+            .filter((value): value is number => typeof value === "number")
+        )
+      );
+
+      const relatedSiteRows: SiteRow[] = [];
+
+      if (categoryIds.length > 0) {
+        const relatedRaw = await db
+          .select({ site: SITE_BASE_SELECTION })
+          .from(siteCategories)
+          .innerJoin(sites, eq(siteCategories.siteId, sites.id))
+          .where(
+            and(
+              inArray(siteCategories.categoryId, categoryIds),
+              ne(siteCategories.siteId, siteId)
+            )
+          )
+          .orderBy(asc(sites.createdAt))
+          .limit(12);
+
+        const normalizedRelated = normalizeSiteRows(
+          relatedRaw.map((entry) => entry.site as Partial<SiteRow>)
+        );
+
+        const seen = new Set<number>();
+        for (const row of normalizedRelated) {
+          if (seen.has(row.id)) {
+            continue;
+          }
+          seen.add(row.id);
+          relatedSiteRows.push(row);
+          if (relatedSiteRows.length === 3) {
+            break;
+          }
+        }
       }
+
+      const metadataSiteIds = [siteId, ...relatedSiteRows.map((row) => row.id)];
+      const { categoriesMap, tagsMap } = await loadSiteMetadata(
+        metadataSiteIds
+      );
+
+      let publisherName = "ToolCategory";
+      let publisherAvatar: string | null = null;
+
+      if (typeof site.userId === "string" && site.userId.length > 0) {
+        const publisherRows = await db
+          .select({ name: users.name, image: users.image })
+          .from(users)
+          .where(eq(users.id, site.userId))
+          .limit(1);
+
+        const publisher = publisherRows[0];
+        if (publisher?.name) {
+          publisherName = publisher.name;
+        }
+        if (publisher?.image) {
+          publisherAvatar = publisher.image;
+        }
+      }
+
+      if (!site.userId || publisherName === "ToolCategory") {
+        const hostMeta = extractHostLabel(site.link);
+        if (hostMeta.title.trim().length > 0) {
+          publisherName = hostMeta.title;
+        }
+      }
+
+      const related = relatedSiteRows.map((row) =>
+        mapSite(row, categoriesMap, tagsMap)
+      );
+
+      const hostInfo = extractHostLabel(site.link);
+
+      return {
+        id: site.id,
+        name: site.name,
+        description: resolveDescription(site),
+        introductionMarkdown: site.introduction,
+        image: site.image?.trim() ?? null,
+        link: site.link?.trim() ?? null,
+        createdAt: site.createdAt,
+        categories: categoriesMap[siteId] ?? [],
+        tags: tagsMap[siteId] ?? [],
+        publisherName,
+        publisherAvatar,
+        websiteLabel: hostInfo.label,
+        related,
+      };
+    } catch (error) {
+      logError("getSiteDetail", error);
+      return null;
     }
-
-    if (!site.userId || publisherName === "ToolCategory") {
-      const hostMeta = extractHostLabel(site.link);
-      if (hostMeta.title.trim().length > 0) {
-        publisherName = hostMeta.title;
-      }
-    }
-
-    const related = relatedSiteRows.map((row) =>
-      mapSite(row, categoriesMap, tagsMap),
-    );
-
-    const hostInfo = extractHostLabel(site.link);
-
-    return {
-      id: site.id,
-      name: site.name,
-      description: resolveDescription(site),
-      introductionMarkdown: site.introduction,
-      image: site.image?.trim() ?? null,
-      link: site.link?.trim() ?? null,
-      createdAt: site.createdAt,
-      categories: categoriesMap[siteId] ?? [],
-      tags: tagsMap[siteId] ?? [],
-      publisherName,
-      publisherAvatar,
-      websiteLabel: hostInfo.label,
-      related,
-    };
-  } catch (error) {
-    logError("getSiteDetail", error);
-    return null;
   }
-});
+);
+
+export const getSiteForPayment = cache(
+  async (uuid: string): Promise<PaymentSite | null> => {
+    try {
+      const rows = await db
+        .select(SITE_BASE_SELECTION)
+        .from(sites)
+        .where(eq(sites.uuid, uuid))
+        .limit(1);
+
+      const normalized = normalizeSiteRows(rows as Partial<SiteRow>[]);
+      const site = normalized[0];
+
+      if (!site) {
+        return null;
+      }
+
+      const { categoriesMap, tagsMap } = await loadSiteMetadata([site.id]);
+
+      return {
+        id: site.id,
+        uuid: site.uuid,
+        name: site.name,
+        description: resolveDescription(site),
+        image: site.image?.trim() ?? null,
+        link: site.link?.trim() ?? null,
+        createdAt: site.createdAt,
+        isVerified: site.isVerified === 1,
+        categories: categoriesMap[site.id] ?? [],
+        tags: tagsMap[site.id] ?? [],
+        publishedAt: site.publishedAt,
+      };
+    } catch (error) {
+      logError("getSiteForPayment", error);
+      return null;
+    }
+  }
+);
