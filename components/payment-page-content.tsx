@@ -117,7 +117,7 @@ export function PaymentPageContent({ site }: PaymentPageContentProps) {
     const orderToken = searchParams.get("token");
 
     if (paypalStatus === "cancel") {
-      toast.info("PayPal checkout was cancelled.");
+      toast("PayPal checkout was cancelled.");
       router.replace(pathname);
       return;
     }
@@ -149,7 +149,7 @@ export function PaymentPageContent({ site }: PaymentPageContentProps) {
             const planLabel = result.plan === "pro" ? "Pro" : "Basic";
             toast.success(`Payment completed for the ${planLabel} plan.`);
           } else {
-            toast.info(`PayPal returned status ${status}.`);
+            toast(`PayPal returned status ${status}.`);
           }
         } catch (error) {
           console.error("[paypal] capture failed", error);
@@ -273,7 +273,6 @@ export function PaymentPageContent({ site }: PaymentPageContentProps) {
 
             <PricingPlans
               className="md:grid-cols-2 xl:grid-cols-3"
-              buttonLabel="Select plan"
               onPlanSelect={handlePlanSelect}
               processingPlanName={processingPlan}
             />

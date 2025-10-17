@@ -4,12 +4,13 @@ import { config } from "dotenv";
 // Load environment variables
 config();
 
-const connectionString = process.env.DATABASE_URL;
+const rawConnectionString = process.env.DATABASE_URL;
 
-if (!connectionString) {
-  console.error("❌ DATABASE_URL is not set in environment variables");
-  process.exit(1);
+if (!rawConnectionString) {
+  throw new Error("DATABASE_URL is not set in environment variables");
 }
+
+const connectionString = rawConnectionString;
 
 console.log("📍 Connecting to database:", connectionString.replace(/:[^:@]+@/, ":****@"));
 

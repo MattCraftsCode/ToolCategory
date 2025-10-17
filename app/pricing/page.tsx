@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 
 import { ArrowDown, ArrowUp } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -67,7 +67,7 @@ const faqs: FAQItem[] = [
   {
     question: "Do I need to provide a backlink for my listing?",
     answer:
-      "No, providing a backlink is optional. However, having a backlink can improve your product’s credibility and visibility.",
+      "No, providing a backlink is optional. However, having a backlink can improve your product's credibility and visibility.",
   },
   {
     question: "What happens if I remove the badge from my website?",
@@ -77,11 +77,11 @@ const faqs: FAQItem[] = [
   {
     question: "Is Tool Fame the same as ToolFame?",
     answer:
-      "Yes, “Tool Fame” and “ToolFame” refer to the same platform. Both names may appear in different contexts but they represent the same service.",
+      "Yes, \"Tool Fame\" and \"ToolFame\" refer to the same platform. Both names may appear in different contexts but they represent the same service.",
   },
 ];
 
-export default function PricingPage() {
+function PricingContent() {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
   const [processingPlan, setProcessingPlan] = useState<string | null>(null);
   const [captureStatus, setCaptureStatus] = useState<string | null>(null);
@@ -153,7 +153,7 @@ export default function PricingPage() {
     const orderToken = searchParams.get("token");
 
     if (paypalStatus === "cancel") {
-      toast.info("PayPal checkout was cancelled.");
+      toast("PayPal checkout was cancelled.");
       router.replace(pathname);
       return;
     }
@@ -185,7 +185,7 @@ export default function PricingPage() {
             const planLabel = result.plan === "pro" ? "Pro" : "Basic";
             toast.success(`Payment completed for the ${planLabel} plan.`);
           } else {
-            toast.info(`PayPal returned status ${status}.`);
+            toast(`PayPal returned status ${status}.`);
           }
         } catch (error) {
           console.error("[paypal] capture failed", error);
@@ -284,5 +284,21 @@ export default function PricingPage() {
         <ArrowUp className="h-5 w-5" />
       </a>
     </div>
+  );
+}
+
+export default function PricingPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-b from-white via-[#fff8f5] to-white text-[#1f1f24]">
+        <SiteHeader />
+        <div className="flex flex-1 items-center justify-center py-24">
+          <div className="text-center">Loading...</div>
+        </div>
+        <SiteFooter />
+      </div>
+    }>
+      <PricingContent />
+    </Suspense>
   );
 }

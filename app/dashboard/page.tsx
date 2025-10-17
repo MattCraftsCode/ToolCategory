@@ -58,8 +58,8 @@ const actions = [
   { label: "Edit", icon: PencilLine },
 ];
 
-const totalPages = 5;
-const currentPage = 1;
+const totalPages: number = 5;
+const currentPage: number = 1;
 
 export default async function DashboardPage() {
   const session = await auth();

@@ -1,3 +1,5 @@
+import type { ReactElement } from "react";
+
 import { cn } from "@/lib/utils";
 
 type MarkdownContentProps = {
@@ -56,7 +58,7 @@ export function MarkdownContent({ content, className }: MarkdownContentProps) {
   }
 
   const lines = content.split(/\r?\n/);
-  const elements: JSX.Element[] = [];
+  const elements: ReactElement[] = [];
   let paragraphBuffer: string[] = [];
   let listBuffer: { type: "ul" | "ol"; items: string[] } | null = null;
   let codeBuffer: string[] | null = null;

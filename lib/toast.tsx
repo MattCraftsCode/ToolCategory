@@ -50,7 +50,7 @@ export function ToastContainer({
     const handleToast: Listener = (message) => {
       setToasts((previous) => [...previous, { ...message, closing: false }]);
 
-      const hideTimer = window.setTimeout(() => {
+      window.setTimeout(() => {
         setToasts((previous) =>
           previous.map((toast) =>
             toast.id === message.id ? { ...toast, closing: true } : toast,

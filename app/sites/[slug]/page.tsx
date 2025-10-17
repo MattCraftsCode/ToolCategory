@@ -133,13 +133,12 @@ function RelatedToolCard({ tool, index }: { tool: HomePageTool; index: number })
 }
 
 type PageProps = {
-  params: {
-    slug: string;
-  };
+  params: Promise<{ slug: string }>;
 };
 
 export default async function SiteDetailPage({ params }: PageProps) {
-  const site = await getSiteDetail(params.slug);
+  const { slug } = await params;
+  const site = await getSiteDetail(slug);
 
   if (!site) {
     notFound();

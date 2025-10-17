@@ -22,7 +22,6 @@ type SubmissionPreviewProps = {
   createdDate: string;
   className?: string;
   actions?: SubmissionAction[];
-  variant?: "default" | "dashboard";
   statusColor?: string;
 };
 
@@ -38,7 +37,6 @@ export function SubmissionPreview({
   createdDate,
   className,
   actions,
-  variant = "default",
   statusColor,
 }: SubmissionPreviewProps) {
   const hasActions = Boolean(actions?.length);

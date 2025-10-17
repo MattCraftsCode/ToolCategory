@@ -5,7 +5,6 @@ import Link from "next/link";
 import { Upload, LogOut, LayoutDashboard } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import { useState, useRef, useEffect } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 
@@ -21,9 +20,6 @@ export function SiteHeader() {
   const { data: session } = useSession();
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
 
   const getUserInitials = (name: string | null | undefined) => {
     if (!name) return "U";
@@ -33,6 +29,14 @@ export function SiteHeader() {
       .join("")
       .toUpperCase()
       .slice(0, 2);
+  };
+
+  const handleSignInClick = () => {
+    const callback =
+      typeof window !== "undefined" ? window.location.href : "/";
+    if (typeof window !== "undefined") {
+      window.location.href = `/login?callbackUrl=${encodeURIComponent(callback)}`;
+    }
   };
 
   // Handle click outside to close dropdown
@@ -163,13 +167,3 @@ export function SiteHeader() {
     </>
   );
 }
-  const getFallbackCallback = () => {
-    const search = searchParams.toString();
-    return search ? `${pathname}?${search}` : pathname ?? "/";
-  };
-
-  const handleSignInClick = () => {
-    const callback =
-      typeof window !== "undefined" ? window.location.href : getFallbackCallback();
-    router.push(`/login?callbackUrl=${encodeURIComponent(callback)}`);
-  };

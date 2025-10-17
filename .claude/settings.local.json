@@ -15,7 +15,8 @@
       "Bash(pnpm add -D dotenv)",
       "Bash(pnpm db:verify)",
       "Bash(pnpm db:check-users)",
-      "Bash(pnpm db:migrate-names)"
+      "Bash(pnpm db:migrate-names)",
+      "Bash(pnpm build:*)"
     ],
     "deny": [],
     "ask": []

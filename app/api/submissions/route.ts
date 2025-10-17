@@ -137,19 +137,24 @@ export async function POST(request: Request) {
 
       for (const categoryName of normalizedCategories) {
         const categorySlug = slugify(categoryName);
-        let existing = await tx.query.categories.findFirst({
+        const existingCategory = await tx.query.categories.findFirst({
           where: eq(categories.slug, categorySlug),
         });
 
-        if (!existing) {
-          [existing] = await tx
+        if (!existingCategory) {
+          const [inserted] = await tx
             .insert(categories)
             .values({ name: categoryName, slug: categorySlug })
             .returning({ id: categories.id, slug: categories.slug, name: categories.name });
-        }
-
-        if (existing) {
-          categoryRecords.push(existing);
+          if (inserted) {
+            categoryRecords.push(inserted);
+          }
+        } else {
+          categoryRecords.push({
+            id: Number(existingCategory.id),
+            slug: existingCategory.slug ?? categorySlug,
+            name: existingCategory.name ?? categoryName,
+          });
         }
       }
 
@@ -157,17 +162,24 @@ export async function POST(request: Request) {
 
       for (const tagName of normalizedTags) {
         const tagSlug = slugify(tagName);
-        let existing = await tx.query.tags.findFirst({ where: eq(tags.slug, tagSlug) });
+        const existingTag = await tx.query.tags.findFirst({
+          where: eq(tags.slug, tagSlug),
+        });
 
-        if (!existing) {
-          [existing] = await tx
+        if (!existingTag) {
+          const [inserted] = await tx
             .insert(tags)
             .values({ name: tagName, slug: tagSlug })
             .returning({ id: tags.id, slug: tags.slug, name: tags.name });
-        }
-
-        if (existing) {
-          tagRecords.push(existing);
+          if (inserted) {
+            tagRecords.push(inserted);
+          }
+        } else {
+          tagRecords.push({
+            id: Number(existingTag.id),
+            slug: existingTag.slug ?? tagSlug,
+            name: existingTag.name ?? tagName,
+          });
         }
       }
 
@@ -201,15 +213,14 @@ export async function POST(request: Request) {
 }
 
 async function generateUniqueSiteSlug(
-  tx: typeof db,
+  tx: typeof db | TransactionLike,
   baseSlug: string,
 ): Promise<string> {
   const safeBase = baseSlug.length > 0 ? baseSlug : "site";
-  let candidate = safeBase;
-  let suffix = 1;
 
-  // eslint-disable-next-line no-constant-condition
-  while (true) {
+  for (let suffix = 0; ; suffix += 1) {
+    const candidate = suffix === 0 ? safeBase : `${safeBase}-${suffix}`;
+
     const existing = await tx.query.sites.findFirst({
       where: eq(sites.slug, candidate),
       columns: { id: true },
@@ -218,8 +229,7 @@ async function generateUniqueSiteSlug(
     if (!existing) {
       return candidate;
     }
-
-    candidate = `${safeBase}-${suffix}`;
-    suffix += 1;
   }
 }
+
+type TransactionLike = Parameters<Parameters<typeof db.transaction>[0]>[0];

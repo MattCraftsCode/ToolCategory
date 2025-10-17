@@ -406,9 +406,15 @@ export const getHomePageSections = cache(
         .where(isNotNull(sites.publishedAt))
         .orderBy(asc(categories.name), desc(sites.createdAt));
 
-      const featuredRows = normalizeSiteRows(featuredRowsRaw);
-      const latestRows = normalizeSiteRows(latestRowsRaw);
-      const categorySiteRows = normalizeSectionRows(categorySiteRowsRaw);
+      const featuredRows = normalizeSiteRows(
+        featuredRowsRaw as Partial<SiteRow>[],
+      );
+      const latestRows = normalizeSiteRows(
+        latestRowsRaw as Partial<SiteRow>[],
+      );
+      const categorySiteRows = normalizeSectionRows(
+        categorySiteRowsRaw as Partial<SiteSection>[],
+      );
 
       const siteIds = new Set<number>();
 

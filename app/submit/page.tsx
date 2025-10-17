@@ -233,13 +233,13 @@ export default function SubmitPage() {
         setIsUploadingImage(false);
       }
     },
-    [clearImage, setErrors]
+    [clearImage, ensureAuthenticated, setErrors]
   );
 
   const handleSelectedFile = useCallback(
     async (file: File) => {
       if (isUploadingImage) {
-        toast.info("Please wait for the current image upload to finish.");
+        toast("Please wait for the current image upload to finish.");
         return;
       }
 
@@ -301,7 +301,7 @@ export default function SubmitPage() {
         await handleSelectedFile(file);
       }
     },
-    [handleSelectedFile]
+    [ensureAuthenticated, handleSelectedFile]
   );
 
   const handleDragOver = useCallback((event: DragEvent<HTMLDivElement>) => {
@@ -349,22 +349,24 @@ export default function SubmitPage() {
         );
       }
 
-      if (payload.data.name) {
-        setName(payload.data.name);
+      const autofillData = payload.data;
+
+      if (autofillData.name) {
+        setName(autofillData.name);
       }
-      if (payload.data.description) {
-        setDescription(payload.data.description);
+      if (autofillData.description) {
+        setDescription(autofillData.description);
       }
-      if (payload.data.introduction) {
-        setIntroduction(payload.data.introduction);
+      if (autofillData.introduction) {
+        setIntroduction(autofillData.introduction);
       }
 
       setErrors((prev) => ({
         ...prev,
         link: undefined,
-        name: payload.data.name ? undefined : prev.name,
-        description: payload.data.description ? undefined : prev.description,
-        introduction: payload.data.introduction ? undefined : prev.introduction,
+        name: autofillData.name ? undefined : prev.name,
+        description: autofillData.description ? undefined : prev.description,
+        introduction: autofillData.introduction ? undefined : prev.introduction,
       }));
 
       toast.success("We pre-filled the form using your product link.");
@@ -386,8 +388,12 @@ export default function SubmitPage() {
     async (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault();
 
+      if (!ensureAuthenticated()) {
+        return;
+      }
+
       if (isUploadingImage) {
-        toast.info("Please wait for the image upload to finish.");
+        toast("Please wait for the image upload to finish.");
         setErrors((prev) => ({
           ...prev,
           image:
@@ -507,7 +513,6 @@ export default function SubmitPage() {
       description,
       imageUrl,
       introduction,
-      ensureAuthenticated,
       isUploadingImage,
       link,
       name,
@@ -515,6 +520,7 @@ export default function SubmitPage() {
       selectedTags,
       router,
       setErrors,
+      ensureAuthenticated,
     ]
   );
 

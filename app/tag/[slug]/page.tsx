@@ -2,13 +2,11 @@ import { TagPageContent } from "@/components/tag-page-content";
 import { loadDiscoveryData } from "@/lib/tag-page-data";
 
 type TagSlugPageProps = {
-  params: {
-    slug: string;
-  };
+  params: Promise<{ slug: string }>;
 };
 
 export default async function TagSlugPage({ params }: TagSlugPageProps) {
-  const { slug } = params;
+  const { slug } = await params;
   const { tools, categories, tags } = await loadDiscoveryData();
 
   return (

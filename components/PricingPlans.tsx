@@ -90,7 +90,6 @@ const DEFAULT_PLANS: PlanDefinition[] = [
 type PricingPlansProps = {
   plans?: PlanDefinition[];
   className?: string;
-  buttonLabel?: string;
   onPlanSelect?: (plan: PlanDefinition) => void;
   processingPlanName?: string | null;
 };
@@ -98,7 +97,6 @@ type PricingPlansProps = {
 export function PricingPlans({
   plans = DEFAULT_PLANS,
   className,
-  buttonLabel = "Go Submit",
   onPlanSelect,
   processingPlanName,
 }: PricingPlansProps) {

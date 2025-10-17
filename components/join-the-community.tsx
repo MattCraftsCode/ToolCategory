@@ -50,7 +50,7 @@ export function JoinTheCommunity({ className }: JoinTheCommunityProps) {
       }
 
       if (data.isNew === false) {
-        toast.info("You’re already on the list. Stay tuned!");
+        toast("You’re already on the list. Stay tuned!");
       } else {
         toast.success("Thanks for subscribing! We'll tip you off as soon as fresh tools arrive.");
       }
