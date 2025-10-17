@@ -171,7 +171,11 @@ export function PricingPlans({
               onClick={() => onPlanSelect?.(plan)}
               disabled={processingPlanName === plan.name}
             >
-              {processingPlanName === plan.name ? "Redirecting…" : buttonLabel}
+              {processingPlanName === plan.name
+                ? "Redirecting…"
+                : plan.name.toLowerCase() === "free"
+                  ? "Go submit"
+                  : "Select plan"}
               <ArrowRight className="h-4 w-4" />
             </Button>
           </div>
