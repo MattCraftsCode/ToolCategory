@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ShieldCheck } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "react-toastify";
+import { useSession } from "next-auth/react";
 
 import { BacklinkVerification } from "@/components/BacklinkVerification";
 import { PricingPlans, type PlanDefinition } from "@/components/PricingPlans";
@@ -46,6 +47,18 @@ export function PaymentPageContent({ site }: PaymentPageContentProps) {
   const normalizedUserType = site.userType.toLowerCase();
   const isPaidUser = normalizedUserType !== "free";
   const planLabel = site.planLabel;
+
+  const { data: session } = useSession();
+
+  const requireLogin = useCallback(() => {
+    if (session?.user?.id) {
+      return false;
+    }
+    const callback =
+      typeof window !== "undefined" ? window.location.href : `/payment/${site.uuid}`;
+    router.push(`/login?callbackUrl=${encodeURIComponent(callback)}`);
+    return true;
+  }, [router, session?.user?.id, site.uuid]);
 
   useEffect(() => {
     return () => {
@@ -154,6 +167,10 @@ export function PaymentPageContent({ site }: PaymentPageContentProps) {
 
   const handlePlanSelect = useCallback(
     (plan: PlanDefinition) => {
+      if (requireLogin()) {
+        return;
+      }
+
       const planName = plan.name.trim().toLowerCase();
 
       if (planName === "free") {
@@ -180,7 +197,7 @@ export function PaymentPageContent({ site }: PaymentPageContentProps) {
 
       void initiatePayPalCheckout(plan.name);
     },
-    [initiatePayPalCheckout]
+    [initiatePayPalCheckout, requireLogin]
   );
 
   return (

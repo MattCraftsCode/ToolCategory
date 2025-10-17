@@ -21,6 +21,7 @@ import { MultiSelect } from "@/components/multi-select";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
+import { useSession } from "next-auth/react";
 import {
   Dialog,
   DialogContent,
@@ -43,13 +44,28 @@ type SubmitErrors = {
 };
 
 export default function SubmitPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (status === "loading") {
+      return;
+    }
+    if (!session?.user?.id) {
+      const callback =
+        typeof window !== "undefined" ? window.location.href : "/submit";
+      router.replace(`/login?callbackUrl=${encodeURIComponent(callback)}`);
+    }
+  }, [router, session?.user?.id, status]);
+
   const [link, setLink] = useState("");
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [introduction, setIntroduction] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [categoryOptions, setCategoryOptions] = useState<string[]>(DEFAULT_CATEGORIES);
+  const [categoryOptions, setCategoryOptions] =
+    useState<string[]>(DEFAULT_CATEGORIES);
   const [tagOptions, setTagOptions] = useState<string[]>(DEFAULT_TAGS);
   const [showAutofillConfirm, setShowAutofillConfirm] = useState(false);
   const [isAutofilling, setIsAutofilling] = useState(false);
@@ -59,8 +75,6 @@ export default function SubmitPage() {
   const [isDraggingImage, setIsDraggingImage] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<SubmitErrors>({});
-
-  const router = useRouter();
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const previewUrlRef = useRef<string | null>(null);
@@ -112,17 +126,35 @@ export default function SubmitPage() {
 
   useEffect(() => {
     setSelectedCategories((previous) =>
-      previous.filter((item) => categoryOptions.includes(item)),
+      previous.filter((item) => categoryOptions.includes(item))
     );
   }, [categoryOptions]);
 
   useEffect(() => {
-    setSelectedTags((previous) => previous.filter((item) => tagOptions.includes(item)));
+    setSelectedTags((previous) =>
+      previous.filter((item) => tagOptions.includes(item))
+    );
   }, [tagOptions]);
 
-  const isAutofillDisabled = useMemo(() => !link.trim() || isAutofilling, [link, isAutofilling]);
+  const isAutofillDisabled = useMemo(
+    () => !link.trim() || isAutofilling,
+    [link, isAutofilling]
+  );
+
+  const ensureAuthenticated = useCallback(() => {
+    if (session?.user?.id) {
+      return true;
+    }
+    const callback =
+      typeof window !== "undefined" ? window.location.href : "/submit";
+    router.push(`/login?callbackUrl=${encodeURIComponent(callback)}`);
+    return false;
+  }, [router, session?.user?.id]);
 
   const handleAutofillRequest = () => {
+    if (!ensureAuthenticated()) {
+      return;
+    }
     if (!link.trim()) {
       toast.error("Add your product link before using AI Autofill.");
       return;
@@ -154,6 +186,9 @@ export default function SubmitPage() {
 
   const uploadImage = useCallback(
     async (file: File) => {
+      if (!ensureAuthenticated()) {
+        return;
+      }
       const formData = new FormData();
       formData.append("file", file);
 
@@ -164,9 +199,11 @@ export default function SubmitPage() {
           body: formData,
         });
 
-        const payload = (await response.json().catch(() => null)) as
-          | { success?: boolean; url?: string; error?: string }
-          | null;
+        const payload = (await response.json().catch(() => null)) as {
+          success?: boolean;
+          url?: string;
+          error?: string;
+        } | null;
 
         if (!response.ok || !payload?.success || !payload.url) {
           throw new Error(payload?.error ?? "Upload failed");
@@ -182,7 +219,7 @@ export default function SubmitPage() {
         toast.error(
           error instanceof Error
             ? error.message
-            : "We couldn’t upload that image right now. Please try a smaller file.",
+            : "We couldn’t upload that image right now. Please try a smaller file."
         );
         clearImage();
         setErrors((prev) => ({
@@ -196,7 +233,7 @@ export default function SubmitPage() {
         setIsUploadingImage(false);
       }
     },
-    [clearImage, setErrors],
+    [clearImage, setErrors]
   );
 
   const handleSelectedFile = useCallback(
@@ -235,7 +272,7 @@ export default function SubmitPage() {
 
       await uploadImage(file);
     },
-    [isUploadingImage, setErrors, uploadImage],
+    [isUploadingImage, setErrors, uploadImage]
   );
 
   const handleInputChange = useCallback(
@@ -246,12 +283,16 @@ export default function SubmitPage() {
       }
       event.target.value = "";
     },
-    [handleSelectedFile],
+    [handleSelectedFile]
   );
 
   const handleDrop = useCallback(
     async (event: DragEvent<HTMLDivElement>) => {
       event.preventDefault();
+
+      if (!ensureAuthenticated()) {
+        return;
+      }
       event.stopPropagation();
       setIsDraggingImage(false);
 
@@ -260,7 +301,7 @@ export default function SubmitPage() {
         await handleSelectedFile(file);
       }
     },
-    [handleSelectedFile],
+    [handleSelectedFile]
   );
 
   const handleDragOver = useCallback((event: DragEvent<HTMLDivElement>) => {
@@ -295,17 +336,16 @@ export default function SubmitPage() {
         body: JSON.stringify({ url: link.trim() }),
       });
 
-      const payload = (await response.json().catch(() => null)) as
-        | {
-            success?: boolean;
-            data?: { name?: string; description?: string; introduction?: string };
-            error?: string;
-          }
-        | null;
+      const payload = (await response.json().catch(() => null)) as {
+        success?: boolean;
+        data?: { name?: string; description?: string; introduction?: string };
+        error?: string;
+      } | null;
 
       if (!response.ok || !payload?.success || !payload.data) {
         throw new Error(
-          payload?.error ?? "AI Autofill couldn’t analyze that link. Please fill the form manually.",
+          payload?.error ??
+            "AI Autofill couldn’t analyze that link. Please fill the form manually."
         );
       }
 
@@ -335,7 +375,7 @@ export default function SubmitPage() {
       toast.error(
         error instanceof Error
           ? error.message
-          : "Something went wrong while analyzing that link. Please try again.",
+          : "Something went wrong while analyzing that link. Please try again."
       );
     } finally {
       setIsAutofilling(false);
@@ -350,7 +390,8 @@ export default function SubmitPage() {
         toast.info("Please wait for the image upload to finish.");
         setErrors((prev) => ({
           ...prev,
-          image: "Please wait for the current image upload to finish before submitting.",
+          image:
+            "Please wait for the current image upload to finish before submitting.",
         }));
         return;
       }
@@ -386,7 +427,8 @@ export default function SubmitPage() {
       }
 
       if (!trimmedIntroduction) {
-        nextErrors.introduction = "Share a longer introduction for your product.";
+        nextErrors.introduction =
+          "Share a longer introduction for your product.";
       }
 
       if (!imageUrl) {
@@ -420,16 +462,17 @@ export default function SubmitPage() {
           body: JSON.stringify(payload),
         });
 
-        const result = (await response.json().catch(() => null)) as
-          | {
-              success?: boolean;
-              error?: string;
-              site?: { id: number; slug: string; uuid: string };
-            }
-          | null;
+        const result = (await response.json().catch(() => null)) as {
+          success?: boolean;
+          error?: string;
+          site?: { id: number; slug: string; uuid: string };
+        } | null;
 
         if (!response.ok || !result?.success || !result.site?.uuid) {
-          throw new Error(result?.error ?? "We couldn’t submit your product. Please try again.");
+          throw new Error(
+            result?.error ??
+              "We couldn’t submit your product. Please try again."
+          );
         }
 
         const targetUuid = result.site.uuid;
@@ -453,7 +496,7 @@ export default function SubmitPage() {
         toast.error(
           error instanceof Error
             ? error.message
-            : "We couldn’t submit your product. Please try again in a moment.",
+            : "We couldn’t submit your product. Please try again in a moment."
         );
       } finally {
         setIsSubmitting(false);
@@ -464,6 +507,7 @@ export default function SubmitPage() {
       description,
       imageUrl,
       introduction,
+      ensureAuthenticated,
       isUploadingImage,
       link,
       name,
@@ -471,7 +515,7 @@ export default function SubmitPage() {
       selectedTags,
       router,
       setErrors,
-    ],
+    ]
   );
 
   return (
@@ -487,8 +531,9 @@ export default function SubmitPage() {
                   Submit your product
                 </h1>
                 <p className="mt-2 max-w-3xl text-sm text-[#6a6a74]">
-                  Share your tool with the ToolCategory community. Provide clear details so we can
-                  review, categorize, and feature your product in the best collections.
+                  Share your tool with the ToolCategory community. Provide clear
+                  details so we can review, categorize, and feature your product
+                  in the best collections.
                 </p>
               </div>
             </div>
@@ -515,7 +560,7 @@ export default function SubmitPage() {
                     aria-invalid={Boolean(errors.link)}
                     className={cn(
                       "h-12 w-full rounded-[10px] border border-[#e0e0e6] bg-white px-4 text-sm text-[#2d2d32] placeholder:text-[#b0b0b5] transition focus:border-[#ff7d68] focus:outline-none focus:ring-2 focus:ring-[#ff7d68]/15",
-                      errors.link && "border-[#ff9f8c] focus:ring-[#ff7d68]/25",
+                      errors.link && "border-[#ff9f8c] focus:ring-[#ff7d68]/25"
                     )}
                   />
                   <Button
@@ -554,7 +599,7 @@ export default function SubmitPage() {
                   aria-invalid={Boolean(errors.name)}
                   className={cn(
                     "h-12 w-full rounded-[10px] border border-[#e0e0e6] bg-white px-4 text-sm text-[#2d2d32] placeholder:text-[#b0b0b5] transition focus:border-[#ff7d68] focus:outline-none focus:ring-2 focus:ring-[#ff7d68]/15",
-                    errors.name && "border-[#ff9f8c] focus:ring-[#ff7d68]/25",
+                    errors.name && "border-[#ff9f8c] focus:ring-[#ff7d68]/25"
                   )}
                 />
                 {errors.name ? (
@@ -576,7 +621,7 @@ export default function SubmitPage() {
                   }}
                   borderClassName={cn(
                     "border-[#e0e0e6] hover:border-[#ff7d68] focus:border-[#ff7d68]",
-                    errors.categories && "border-[#ff9f8c]",
+                    errors.categories && "border-[#ff9f8c]"
                   )}
                 />
                 {errors.categories ? (
@@ -595,7 +640,7 @@ export default function SubmitPage() {
                   }}
                   borderClassName={cn(
                     "border-[#e0e0e6] hover:border-[#ff7d68] focus:border-[#ff7d68]",
-                    errors.tags && "border-[#ff9f8c]",
+                    errors.tags && "border-[#ff9f8c]"
                   )}
                 />
                 {errors.tags ? (
@@ -607,7 +652,9 @@ export default function SubmitPage() {
             <div className="space-y-3">
               <div className="flex flex-wrap items-center justify-between gap-3 text-sm font-medium text-[#1f1f24]">
                 <span>Description</span>
-                <span className="text-xs font-normal text-[#9a9aa3]">[Words: 0/80-160]</span>
+                <span className="text-xs font-normal text-[#9a9aa3]">
+                  [Words: 0/80-160]
+                </span>
               </div>
               <textarea
                 placeholder="Enter a brief description of your product... For example: A powerful AI content generation tool that helps creators produce high-quality articles and marketing copy with advanced NLP capabilities"
@@ -620,7 +667,8 @@ export default function SubmitPage() {
                 aria-invalid={Boolean(errors.description)}
                 className={cn(
                   "min-h-[110px] w-full rounded-[10px] border border-[#e0e0e6] bg-white px-4 py-3 text-sm leading-relaxed text-[#2d2d32] placeholder:text-[#b0b0b5] transition focus:border-[#ff7d68] focus:outline-none focus:ring-2 focus:ring-[#ff7d68]/15",
-                  errors.description && "border-[#ff9f8c] focus:ring-[#ff7d68]/25",
+                  errors.description &&
+                    "border-[#ff9f8c] focus:ring-[#ff7d68]/25"
                 )}
               />
               {errors.description ? (
@@ -642,7 +690,9 @@ export default function SubmitPage() {
                   setErrors((prev) => ({ ...prev, introduction: undefined }));
                 }}
                 className={errors.introduction ? "border-[#ff9f8c]" : undefined}
-                placeholder={"Enter your content here... For Example:\n• Overview\n• Key Features\n• Use Cases\n• Getting Started\n• Pricing & Plans"}
+                placeholder={
+                  "Enter your content here... For Example:\n• Overview\n• Key Features\n• Use Cases\n• Getting Started\n• Pricing & Plans"
+                }
               />
               {errors.introduction ? (
                 <p className="text-xs text-[#ff7d68]">{errors.introduction}</p>
@@ -652,7 +702,9 @@ export default function SubmitPage() {
             <div className="space-y-3">
               <div className="flex flex-wrap items-center justify-between gap-3 text-sm font-medium text-[#1f1f24]">
                 <span>Image</span>
-                <span className="text-xs font-normal text-[#9a9aa3]">(16:9, PNG or JPEG, max 1MB)</span>
+                <span className="text-xs font-normal text-[#9a9aa3]">
+                  (16:9, PNG or JPEG, max 1MB)
+                </span>
               </div>
               <div
                 onClick={openFilePicker}
@@ -662,7 +714,9 @@ export default function SubmitPage() {
                 className={cn(
                   "group relative flex min-h-[220px] cursor-pointer flex-col items-center justify-center overflow-hidden rounded-[12px] border border-dashed bg-[#f8f8fb] text-sm text-[#858593] transition",
                   errors.image ? "border-[#ff9f8c]" : "border-[#d7d7dd]",
-                  isDraggingImage ? "border-[#ff7d68] bg-[#fff4ef]" : "hover:bg-[#f0f0f3]",
+                  isDraggingImage
+                    ? "border-[#ff7d68] bg-[#fff4ef]"
+                    : "hover:bg-[#f0f0f3]"
                 )}
               >
                 {imagePreview ? (
@@ -712,8 +766,12 @@ export default function SubmitPage() {
                   <div className="flex flex-col items-center gap-3 px-6 text-center text-sm text-[#7a7a87]">
                     <ImageIcon aria-hidden className="h-7 w-7 text-[#c4c4cc]" />
                     <div className="space-y-1">
-                      <p className="font-medium text-[#515156]">Drag &amp; drop your hero image</p>
-                      <p className="text-xs text-[#9a9aa3]">or click to browse files from your device</p>
+                      <p className="font-medium text-[#515156]">
+                        Drag &amp; drop your hero image
+                      </p>
+                      <p className="text-xs text-[#9a9aa3]">
+                        or click to browse files from your device
+                      </p>
                     </div>
                   </div>
                 )}
@@ -733,7 +791,9 @@ export default function SubmitPage() {
                 />
               </div>
               {imageUrl ? (
-                <p className="text-xs text-[#7a7a87]">Uploaded to: {imageUrl}</p>
+                <p className="text-xs text-[#7a7a87]">
+                  Uploaded to: {imageUrl}
+                </p>
               ) : errors.image ? (
                 <p className="text-xs text-[#ff7d68]">{errors.image}</p>
               ) : null}
@@ -747,7 +807,8 @@ export default function SubmitPage() {
                   disabled={isSubmitting || isUploadingImage}
                   className={cn(
                     "flex items-center gap-2 rounded-[12px] bg-[#ff7d68] px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-[#ff6b54]",
-                    (isSubmitting || isUploadingImage) && "cursor-not-allowed opacity-70",
+                    (isSubmitting || isUploadingImage) &&
+                      "cursor-not-allowed opacity-70"
                   )}
                 >
                   {isSubmitting ? (
@@ -786,7 +847,9 @@ export default function SubmitPage() {
           <DialogHeader>
             <DialogTitle>AI Autofill</DialogTitle>
             <DialogDescription>
-              Would you like AI to automatically fill in the form using this URL? It may take a moment, so please wait patiently while we analyze the page.
+              Would you like AI to automatically fill in the form using this
+              URL? It may take a moment, so please wait patiently while we
+              analyze the page.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

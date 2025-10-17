@@ -1,3 +1,5 @@
+import { redirect } from "next/navigation";
+
 import { BadgeCheck, ShieldCheck, PencilLine } from "lucide-react";
 
 import {
@@ -11,6 +13,7 @@ import {
 import { SubmissionPreview } from "@/components/SubmissionPreview";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { auth } from "@/lib/auth";
 
 const submissions = [
   {
@@ -58,7 +61,13 @@ const actions = [
 const totalPages = 5;
 const currentPage = 1;
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  const session = await auth();
+
+  if (!session?.user?.id) {
+    redirect(`/login?callbackUrl=${encodeURIComponent("/dashboard")}`);
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-white via-[#faf5ff] to-white text-[#1f1f24]">
       <SiteHeader />

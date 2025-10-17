@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowDown, ArrowUp } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "react-toastify";
+import { useSession } from "next-auth/react";
 
 import { PricingPlans, type PlanDefinition } from "@/components/PricingPlans";
 import { SiteFooter } from "@/components/site-footer";
@@ -89,6 +90,17 @@ export default function PricingPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
+  const { data: session } = useSession();
+
+  const requireLogin = useCallback(() => {
+    if (session?.user?.id) {
+      return false;
+    }
+    const callback =
+      typeof window !== "undefined" ? window.location.href : "/pricing";
+    router.push(`/login?callbackUrl=${encodeURIComponent(callback)}`);
+    return true;
+  }, [router, session?.user?.id]);
 
   const initiatePayPalCheckout = useCallback(async (planName: string) => {
     try {
@@ -120,6 +132,10 @@ export default function PricingPage() {
 
   const handlePlanSelect = useCallback(
     (plan: PlanDefinition) => {
+      if (requireLogin()) {
+        return;
+      }
+
       const planName = plan.name.trim().toLowerCase();
 
       if (planName === "free") {
@@ -129,7 +145,7 @@ export default function PricingPage() {
 
       void initiatePayPalCheckout(plan.name);
     },
-    [initiatePayPalCheckout, router]
+    [initiatePayPalCheckout, requireLogin, router]
   );
 
   useEffect(() => {

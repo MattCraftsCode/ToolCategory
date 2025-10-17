@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import { eq } from "drizzle-orm";
 
@@ -17,27 +17,29 @@ export default async function PaymentPage({
 }) {
   const { uuid } = await params;
 
+  const session = await auth();
+  const userId = session?.user?.id ?? null;
+
+  if (!userId) {
+    redirect(`/login?callbackUrl=${encodeURIComponent(`/payment/${uuid}`)}`);
+  }
+
   const site = await getSiteForPayment(uuid);
 
   if (!site) {
     notFound();
   }
 
-  const session = await auth();
-  const userId = session?.user?.id ?? null;
-
   let userType = "free";
 
-  if (userId) {
-    const [userRecord] = await db
-      .select({ userType: users.userType })
-      .from(users)
-      .where(eq(users.id, userId))
-      .limit(1);
+  const [userRecord] = await db
+    .select({ userType: users.userType })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
 
-    if (userRecord?.userType) {
-      userType = userRecord.userType;
-    }
+  if (userRecord?.userType) {
+    userType = userRecord.userType;
   }
 
   const normalizedUserType = userType.toLowerCase();

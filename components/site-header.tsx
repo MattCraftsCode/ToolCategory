@@ -3,12 +3,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Upload, LogOut, LayoutDashboard } from "lucide-react";
-import { useSession } from "next-auth/react";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import { useState, useRef, useEffect } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
-import { SignInDialog } from "@/components/sign-in-dialog";
 
 const navLinks = [
   { label: "Category", href: "/category" },
@@ -20,9 +19,11 @@ const navLinks = [
 
 export function SiteHeader() {
   const { data: session } = useSession();
-  const [showSignIn, setShowSignIn] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   const getUserInitials = (name: string | null | undefined) => {
     if (!name) return "U";
@@ -149,7 +150,7 @@ export function SiteHeader() {
               </div>
             ) : (
               <Button
-                onClick={() => setShowSignIn(true)}
+                onClick={handleSignInClick}
                 variant="outline"
                 className="rounded-full border-[#ff7d68] text-[#ff7d68] hover:bg-[#fff5f3]"
               >
@@ -159,7 +160,16 @@ export function SiteHeader() {
           </div>
         </div>
       </header>
-      <SignInDialog open={showSignIn} onOpenChange={setShowSignIn} />
     </>
   );
 }
+  const getFallbackCallback = () => {
+    const search = searchParams.toString();
+    return search ? `${pathname}?${search}` : pathname ?? "/";
+  };
+
+  const handleSignInClick = () => {
+    const callback =
+      typeof window !== "undefined" ? window.location.href : getFallbackCallback();
+    router.push(`/login?callbackUrl=${encodeURIComponent(callback)}`);
+  };
