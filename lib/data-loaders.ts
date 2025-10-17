@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, inArray, ne } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNotNull, ne } from "drizzle-orm";
 import { cache } from "react";
 
 import { db } from "@/lib/db";
@@ -351,6 +351,7 @@ export const getDiscoveryTools = cache(async (): Promise<HomePageTool[]> => {
     const rowsRaw = await db
       .select(SITE_BASE_SELECTION)
       .from(sites)
+      .where(isNotNull(sites.publishedAt))
       .orderBy(desc(sites.createdAt));
 
     const sitesNormalized = normalizeSiteRows(rowsRaw as Partial<SiteRow>[]);
@@ -372,12 +373,13 @@ export const getHomePageSections = cache(
         db
           .select(SITE_BASE_SELECTION)
           .from(sites)
-          .where(eq(sites.isFeatured, true))
+          .where(and(eq(sites.isFeatured, true), isNotNull(sites.publishedAt)))
           .orderBy(desc(sites.updatedAt), desc(sites.createdAt))
           .limit(HOMEPAGE_SECTION_SIZE),
         db
           .select(SITE_BASE_SELECTION)
           .from(sites)
+          .where(isNotNull(sites.publishedAt))
           .orderBy(desc(sites.createdAt))
           .limit(HOMEPAGE_SECTION_SIZE),
       ]);
@@ -401,6 +403,7 @@ export const getHomePageSections = cache(
         .from(siteCategories)
         .innerJoin(sites, eq(siteCategories.siteId, sites.id))
         .innerJoin(categories, eq(siteCategories.categoryId, categories.id))
+        .where(isNotNull(sites.publishedAt))
         .orderBy(asc(categories.name), desc(sites.createdAt));
 
       const featuredRows = normalizeSiteRows(featuredRowsRaw);

@@ -1,4 +1,6 @@
-import { Github, Mail, Sun, Twitter } from "lucide-react";
+import Link from "next/link";
+
+import { Github, Mail, Twitter, Sun } from "lucide-react";
 
 import { JoinTheCommunity } from "@/components/join-the-community";
 
@@ -6,22 +8,45 @@ type SiteFooterProps = {
   showJoin?: boolean;
 };
 
+const CONTACT_TWITTER_URL = process.env.NEXT_PUBLIC_CONTACT_TWITTER_URL ?? "";
+const CONTACT_GITHUB_URL = process.env.NEXT_PUBLIC_CONTACT_GITHUB_URL ?? "";
+const CONTACT_EMAIL = process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "";
+const CONTACT_EMAIL_URL = CONTACT_EMAIL ? `mailto:${CONTACT_EMAIL}` : "";
+
+const contactLinks = [
+  { label: "Twitter", href: CONTACT_TWITTER_URL },
+  { label: "Github", href: CONTACT_GITHUB_URL },
+  { label: "Email", href: CONTACT_EMAIL_URL },
+].filter((entry) => entry.href);
+
 const footerNav = [
   {
     heading: "Product",
-    links: ["Submit", "Pricing", "Category"],
+    links: [
+      { label: "Submit", href: "/submit" },
+      { label: "Pricing", href: "/pricing" },
+      { label: "Category", href: "/category" },
+    ],
   },
   {
     heading: "Explore",
-    links: ["Tag", "Blog", "Collection"],
+    links: [
+      { label: "Tag", href: "/tag" },
+      { label: "Blog", href: "/blog" },
+    ],
   },
   {
     heading: "Contact",
-    links: ["Twitter", "Github", "Email"],
+    links: contactLinks,
   },
   {
     heading: "More",
-    links: ["About Us", "Privacy Policy", "Terms of Service", "Sitemap"],
+    links: [
+      { label: "About Us", href: "/about" },
+      { label: "Privacy Policy", href: "/privacy" },
+      { label: "Terms of Service", href: "/terms" },
+      { label: "Sitemap", href: "/sitemap" },
+    ],
   },
 ];
 
@@ -131,37 +156,74 @@ export function SiteFooter({ showJoin = true }: SiteFooterProps) {
                 TC
               </span>
               <div>
-                <p className="text-lg font-semibold text-[#1f1f24]">ToolCategory</p>
+                <p className="text-lg font-semibold text-[#1f1f24]">
+                  ToolCategory
+                </p>
                 <p className="text-sm text-[#6f7075]">
-                  ToolCategory.com &mdash; Explore every tool by category
+                  ToolCategory.com &mdash; Explore, Choose, and Get Things Done.
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-4 text-[#4c4c54]">
-              <Github className="h-5 w-5" />
-              <Twitter className="h-5 w-5" />
-              <Mail className="h-5 w-5" />
+              {CONTACT_GITHUB_URL ? (
+                <Link
+                  href={CONTACT_GITHUB_URL}
+                  aria-label="GitHub"
+                  className="transition hover:text-[#ff7d68]"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <Github className="h-5 w-5" />
+                </Link>
+              ) : null}
+              {CONTACT_TWITTER_URL ? (
+                <Link
+                  href={CONTACT_TWITTER_URL}
+                  aria-label="Twitter"
+                  className="transition hover:text-[#ff7d68]"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <Twitter className="h-5 w-5" />
+                </Link>
+              ) : null}
+              {CONTACT_EMAIL_URL ? (
+                <Link
+                  href={CONTACT_EMAIL_URL}
+                  aria-label="Email"
+                  className="transition hover:text-[#ff7d68]"
+                >
+                  <Mail className="h-5 w-5" />
+                </Link>
+              ) : null}
             </div>
             <p className="text-sm text-[#6f7075]">
               Made with <span className="text-[#ff5b6a]">♥</span> by
-              <span className="pl-1 font-medium text-[#9b5be1]">Hyhor</span>
+              <span className="pl-1 font-medium text-[#9b5be1]">Matt</span>
             </p>
           </div>
           <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-4">
-            {footerNav.map((column) => (
-              <div key={column.heading} className="space-y-3">
-                <p className="text-sm font-semibold uppercase tracking-[0.12em] text-[#1f1f24]">
-                  {column.heading}
-                </p>
-                <ul className="space-y-2 text-sm text-[#6f7075]">
-                  {column.links.map((link) => (
-                    <li key={link} className="cursor-pointer transition hover:text-[#ff7d68]">
-                      {link}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
+            {footerNav
+              .filter((column) => column.links.length > 0)
+              .map((column) => (
+                <div key={column.heading} className="space-y-3">
+                  <p className="text-sm font-semibold uppercase tracking-[0.12em] text-[#1f1f24]">
+                    {column.heading}
+                  </p>
+                  <ul className="space-y-2 text-sm text-[#6f7075]">
+                    {column.links.map((link) => (
+                      <li key={link.label}>
+                        <Link
+                          href={link.href}
+                          className="cursor-pointer transition hover:text-[#ff7d68]"
+                        >
+                          {link.label}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
           </div>
         </div>
 
@@ -171,7 +233,10 @@ export function SiteFooter({ showJoin = true }: SiteFooterProps) {
           </h3>
           <div className="mt-6 grid gap-y-4 gap-x-12 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
             {footerQuickLinks.map((link) => (
-              <p key={link} className="cursor-pointer text-sm text-[#6f7075] transition hover:text-[#ff7d68]">
+              <p
+                key={link}
+                className="cursor-pointer text-sm text-[#6f7075] transition hover:text-[#ff7d68]"
+              >
                 {link}
               </p>
             ))}
@@ -196,10 +261,14 @@ export function SiteFooter({ showJoin = true }: SiteFooterProps) {
                     {partner.icon}
                   </span>
                   <div className="flex flex-col">
-                    <span className={`text-[11px] font-medium uppercase tracking-[0.28em] ${partner.labelClass}`}>
+                    <span
+                      className={`text-[11px] font-medium uppercase tracking-[0.28em] ${partner.labelClass}`}
+                    >
                       {partner.label}
                     </span>
-                    <span className="text-sm font-semibold">{partner.brand}</span>
+                    <span className="text-sm font-semibold">
+                      {partner.brand}
+                    </span>
                   </div>
                 </div>
               ))}
@@ -208,7 +277,10 @@ export function SiteFooter({ showJoin = true }: SiteFooterProps) {
 
           <div className="flex w-full flex-wrap items-center justify-center gap-x-6 gap-y-3 text-sm text-[#5a5a63]">
             {footerTextLinks.map((link) => (
-              <span key={link} className="cursor-pointer transition hover:text-[#ff7d68]">
+              <span
+                key={link}
+                className="cursor-pointer transition hover:text-[#ff7d68]"
+              >
                 {link}
               </span>
             ))}
