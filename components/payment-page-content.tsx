@@ -128,6 +128,7 @@ export function PaymentPageContent({ site }: PaymentPageContentProps) {
       setIsCapturingOrder(true);
 
       (async () => {
+        let success = false;
         try {
           const response = await fetch("/api/payments/paypal/capture", {
             method: "POST",
@@ -147,8 +148,11 @@ export function PaymentPageContent({ site }: PaymentPageContentProps) {
           setCaptureStatus(`PayPal payment status: ${status}`);
 
           if (result.success) {
+            success = true;
             const planLabel = result.plan === "pro" ? "Pro" : "Basic";
             toast.success(`Payment completed for the ${planLabel} plan.`);
+            // Redirect to payment success page
+            router.push(`/payment-success?plan=${result.plan}&orderId=${orderToken}`);
           } else {
             toast(`PayPal returned status ${status}.`);
           }
@@ -160,7 +164,10 @@ export function PaymentPageContent({ site }: PaymentPageContentProps) {
         } finally {
           setIsCapturingOrder(false);
           setProcessingPlan(null);
-          router.replace(pathname);
+          // Only clear URL if payment didn't succeed
+          if (!success) {
+            router.replace(pathname);
+          }
         }
       })();
     }

@@ -16,7 +16,9 @@
       "Bash(pnpm db:verify)",
       "Bash(pnpm db:check-users)",
       "Bash(pnpm db:migrate-names)",
-      "Bash(pnpm build:*)"
+      "Bash(pnpm build:*)",
+      "Bash(pnpm add:*)",
+      "Bash(pnpm dev:*)"
     ],
     "deny": [],
     "ask": []
