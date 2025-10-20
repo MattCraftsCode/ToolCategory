@@ -23,6 +23,8 @@ type SubmissionPreviewProps = {
   className?: string;
   actions?: SubmissionAction[];
   statusColor?: string;
+  primaryActionLabel?: string;
+  primaryActionDisabled?: boolean;
 };
 
 export function SubmissionPreview({
@@ -38,10 +40,16 @@ export function SubmissionPreview({
   className,
   actions,
   statusColor,
+  primaryActionLabel,
+  primaryActionDisabled,
 }: SubmissionPreviewProps) {
   const hasActions = Boolean(actions?.length);
-  const isPublished = status.toLowerCase() === "published";
-  const primaryActionLabel = isPublished ? "Unpublish" : "Verify Badge & Submit";
+  const normalizedStatus = status.toLowerCase();
+  const isPublished = normalizedStatus === "published";
+  const resolvedPrimaryLabel = primaryActionLabel ?? (isPublished ? "Unpublish" : "Verify Badge & Submit");
+  const resolvedPrimaryDisabled = Boolean(primaryActionDisabled);
+  const primaryRequiresAccent =
+    resolvedPrimaryLabel === "Verify Badge & Submit" || resolvedPrimaryLabel === "Badge Verification Required";
 
   return (
     <section className={cn("w-full rounded-[32px] border border-[#ebecf3] bg-white/95 p-8", className)}>
@@ -108,15 +116,21 @@ export function SubmissionPreview({
                   const isPrimary = index === 0;
                   const buttonClasses = cn(
                     "group inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition-all duration-200 shadow-none",
-                    isPrimary && !isPublished
+                    isPrimary && primaryRequiresAccent && !resolvedPrimaryDisabled
                       ? "bg-[#ff6d57] text-white hover:bg-[#ff826f]"
-                      : "border border-[#e4e4eb] bg-white text-[#1f1f24] hover:bg-[#f5f5f8]"
+                      : "border border-[#e4e4eb] bg-white text-[#1f1f24] hover:bg-[#f5f5f8]",
+                    isPrimary && resolvedPrimaryDisabled && "cursor-not-allowed opacity-70 hover:bg-white"
                   );
 
                   return (
-                    <Button key={action.label} type="button" className={buttonClasses}>
+                    <Button
+                      key={action.label}
+                      type="button"
+                      className={buttonClasses}
+                      disabled={isPrimary && resolvedPrimaryDisabled}
+                    >
                       <action.icon className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
-                      {isPrimary ? primaryActionLabel : action.label}
+                      {isPrimary ? resolvedPrimaryLabel : action.label}
                     </Button>
                   );
                 })}

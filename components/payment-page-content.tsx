@@ -10,6 +10,7 @@ import { BacklinkVerification } from "@/components/BacklinkVerification";
 import { PricingPlans, type PlanDefinition } from "@/components/PricingPlans";
 import { SubmissionPreview } from "@/components/SubmissionPreview";
 import { SumitSteps } from "@/components/SumitSteps";
+import { getSubmissionStatus } from "@/lib/submission-status";
 
 type PaymentSiteData = {
   uuid: string;
@@ -22,6 +23,7 @@ type PaymentSiteData = {
   planLabel: string;
   createdDateLabel: string;
   publishedDateLabel: string;
+  isPublished: boolean;
   link: string;
   isVerified: boolean;
   userType: string;
@@ -74,12 +76,12 @@ export function PaymentPageContent({ site }: PaymentPageContentProps) {
     setIsVerified(site.isVerified);
   }, [site.isVerified]);
 
-  const badgeStatusLabel = isPaidUser
-    ? "Badge verification not required"
-    : isVerified
-      ? "Badge Verified"
-      : "Badge Verification Required";
-  const statusColor = isPaidUser || isVerified ? "#32b872" : undefined;
+  const submissionStatus = getSubmissionStatus({
+    isPublished: site.isPublished,
+    isVerified,
+    userType: site.userType,
+  });
+  const statusColor = submissionStatus.color;
   const publishLabel = site.publishedDateLabel || "Not Published";
 
   const initiatePayPalCheckout = useCallback(
@@ -249,7 +251,7 @@ export function PaymentPageContent({ site }: PaymentPageContentProps) {
           category={site.category}
           tags={site.tags}
           plan={planLabel}
-          status={badgeStatusLabel}
+          status={submissionStatus.label}
           publishDate={publishLabel}
           createdDate={site.createdDateLabel}
           statusColor={statusColor}

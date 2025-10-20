@@ -84,6 +84,7 @@ export default async function PaymentPage({
     planLabel,
     createdDateLabel,
     publishedDateLabel,
+    isPublished: Boolean(site.publishedAt),
     link: site.link ?? "",
     isVerified: site.isVerified,
     userType: normalizedUserType,

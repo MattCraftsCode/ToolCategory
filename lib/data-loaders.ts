@@ -147,6 +147,21 @@ export type PaymentSite = {
   publishedAt: Date | null;
 };
 
+export type DashboardSite = {
+  id: number;
+  uuid: string;
+  name: string;
+  slug: string;
+  description: string;
+  image: string | null;
+  link: string | null;
+  createdAt: Date | null;
+  isVerified: boolean;
+  categories: NamedSlug[];
+  tags: NamedSlug[];
+  publishedAt: Date | null;
+};
+
 function resolveDescription(row: SiteRow): string {
   const candidates = [row.description, row.introduction];
   for (const candidate of candidates) {
@@ -682,6 +697,49 @@ export const getSiteForPayment = cache(
     } catch (error) {
       logError("getSiteForPayment", error);
       return null;
+    }
+  }
+);
+
+export const getSitesForUserDashboard = cache(
+  async (userId: string): Promise<DashboardSite[]> => {
+    if (!userId) {
+      return [];
+    }
+
+    try {
+      const rows = await db
+        .select(SITE_BASE_SELECTION)
+        .from(sites)
+        .where(eq(sites.userId, userId))
+        .orderBy(desc(sites.createdAt));
+
+      const normalized = normalizeSiteRows(rows as Partial<SiteRow>[]);
+
+      if (normalized.length === 0) {
+        return [];
+      }
+
+      const siteIds = normalized.map((row) => row.id);
+      const { categoriesMap, tagsMap } = await loadSiteMetadata(siteIds);
+
+      return normalized.map((site) => ({
+        id: site.id,
+        uuid: site.uuid,
+        name: site.name,
+        slug: site.slug,
+        description: resolveDescription(site),
+        image: site.image?.trim() ?? null,
+        link: site.link?.trim() ?? null,
+        createdAt: site.createdAt,
+        isVerified: site.isVerified === 1,
+        categories: categoriesMap[site.id] ?? [],
+        tags: tagsMap[site.id] ?? [],
+        publishedAt: site.publishedAt,
+      }));
+    } catch (error) {
+      logError("getSitesForUserDashboard", error);
+      return [];
     }
   }
 );
