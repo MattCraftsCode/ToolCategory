@@ -1,8 +1,6 @@
 import { redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
 
-import { BadgeCheck, ShieldCheck, PencilLine } from "lucide-react";
-
 import {
   Pagination,
   PaginationContent,
@@ -11,7 +9,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { SubmissionPreview } from "@/components/SubmissionPreview";
+import { DashboardSubmissionCard } from "@/components/dashboard-submission-card";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { auth } from "@/lib/auth";
@@ -19,12 +17,6 @@ import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { getSitesForUserDashboard } from "@/lib/data-loaders";
 import { getSubmissionStatus } from "@/lib/submission-status";
-
-const actions = [
-  { label: "Verify Badge & Submit", icon: BadgeCheck },
-  { label: "Manage Badge", icon: ShieldCheck },
-  { label: "Edit", icon: PencilLine },
-];
 
 const FALLBACK_IMAGE =
   "https://images.unsplash.com/photo-1523475472560-d2df97ec485c?auto=format&fit=crop&w=900&q=80";
@@ -96,12 +88,13 @@ export default async function DashboardPage() {
         return { label: "In Review", disabled: true } as const;
       }
 
-      return { label: "Badge Verification Required", disabled: false } as const;
+      return { label: "Verify Badge & Submit", disabled: false } as const;
     })();
 
     return {
       key: site.uuid,
-      data: {
+      siteUuid: site.uuid,
+      preview: {
         title: site.name,
         description: site.description,
         image: site.image ?? FALLBACK_IMAGE,
@@ -131,7 +124,7 @@ export default async function DashboardPage() {
         {submissions.length > 0 ? (
           <div className="space-y-8">
             {submissions.map((submission) => (
-              <SubmissionPreview key={submission.key} {...submission.data} actions={actions} />
+              <DashboardSubmissionCard key={submission.key} submission={submission} />
             ))}
           </div>
         ) : (

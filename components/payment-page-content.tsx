@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { CheckCircle2, Crown, ShieldCheck, Sparkles } from "lucide-react";
+import { BadgeCheck, CheckCircle2, Crown, ShieldCheck, Sparkles } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "react-toastify";
 import { useSession } from "next-auth/react";
@@ -332,15 +332,66 @@ export function PaymentPageContent({ site }: PaymentPageContentProps) {
         )}
 
         {!isPaidUser ? (
-          <BacklinkVerification
-            ref={backlinkSectionRef}
-            highlight={highlightBacklink}
-            siteUuid={site.uuid}
-            siteSlug={site.slug}
-            defaultUrl={site.link}
-            isVerified={isVerified}
-            onVerified={() => setIsVerified(true)}
-          />
+          isVerified ? (
+            <section className="relative overflow-hidden rounded-[26px] border border-[#dfe7ff] bg-gradient-to-br from-[#f5faff] via-white to-[#eef5ff] p-10">
+              <div className="pointer-events-none absolute -left-16 -top-24 h-64 w-64 rounded-full bg-[#7caaff]/20 blur-[120px]" />
+              <div className="pointer-events-none absolute -bottom-20 -right-12 h-56 w-56 rounded-full bg-[#ff9f8e]/20 blur-[120px]" />
+
+              <div className="relative grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-center">
+                <div className="space-y-6">
+                  <span className="inline-flex items-center gap-2 rounded-full bg-[#eaf3ff] px-4 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-[#3752ff]">
+                    <BadgeCheck className="h-4 w-4" />
+                    Badge Verified
+                  </span>
+                  <div className="space-y-3">
+                    <h2 className="text-2xl font-semibold tracking-tight text-[#1f2440]">
+                      Thanks for verifying your badge!
+                    </h2>
+                    <p className="text-sm leading-relaxed text-[#4c5370]">
+                      Your backlink badge is in place and your submission has been published. Our team is
+                      currently reviewing it to ensure everything looks perfect before it goes live on the
+                      homepage.
+                    </p>
+                  </div>
+                  <div className="grid gap-3 text-sm text-[#495275] sm:grid-cols-2">
+                    <div className="flex items-start gap-2 rounded-[16px] bg-white/80 px-4 py-3 shadow-sm">
+                      <Sparkles className="mt-0.5 h-4 w-4 text-[#3752ff]" />
+                      <span>In review now — you’ll receive an email when the feature is live.</span>
+                    </div>
+                    <div className="flex items-start gap-2 rounded-[16px] bg-white/80 px-4 py-3 shadow-sm">
+                      <Sparkles className="mt-0.5 h-4 w-4 text-[#ff7d68]" />
+                      <span>Need to update anything? Reply to your confirmation email anytime.</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="relative flex h-full flex-col items-center justify-center gap-4 rounded-[22px] border border-white/70 bg-white/80 p-8 text-center shadow-[0_28px_80px_-48px_rgba(55,82,255,0.5)] backdrop-blur">
+                  <span className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-[#3752ff]/10 text-[#3752ff]">
+                    <BadgeCheck className="h-7 w-7" />
+                  </span>
+                  <div className="space-y-1">
+                    <p className="text-sm font-semibold uppercase tracking-[0.35em] text-[#1f2440]">
+                      Status
+                    </p>
+                    <p className="text-lg font-semibold text-[#3752ff]">In Review</p>
+                  </div>
+                  <p className="text-sm leading-relaxed text-[#5b617a]">
+                    Our editorial team is giving your submission the final look. You’re all set!
+                  </p>
+                </div>
+              </div>
+            </section>
+          ) : (
+            <BacklinkVerification
+              ref={backlinkSectionRef}
+              highlight={highlightBacklink}
+              siteUuid={site.uuid}
+              siteSlug={site.slug}
+              defaultUrl={site.link}
+              isVerified={isVerified}
+              onVerified={() => setIsVerified(true)}
+            />
+          )
         ) : null}
       </section>
     </main>

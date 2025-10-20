@@ -1,3 +1,5 @@
+"use client";
+
 import Image from "next/image";
 
 import { Button } from "@/components/ui/button";
@@ -25,6 +27,7 @@ type SubmissionPreviewProps = {
   statusColor?: string;
   primaryActionLabel?: string;
   primaryActionDisabled?: boolean;
+  onPrimaryAction?: () => void;
 };
 
 export function SubmissionPreview({
@@ -42,14 +45,14 @@ export function SubmissionPreview({
   statusColor,
   primaryActionLabel,
   primaryActionDisabled,
+  onPrimaryAction,
 }: SubmissionPreviewProps) {
   const hasActions = Boolean(actions?.length);
   const normalizedStatus = status.toLowerCase();
   const isPublished = normalizedStatus === "published";
   const resolvedPrimaryLabel = primaryActionLabel ?? (isPublished ? "Unpublish" : "Verify Badge & Submit");
   const resolvedPrimaryDisabled = Boolean(primaryActionDisabled);
-  const primaryRequiresAccent =
-    resolvedPrimaryLabel === "Verify Badge & Submit" || resolvedPrimaryLabel === "Badge Verification Required";
+  const primaryRequiresAccent = resolvedPrimaryLabel === "Verify Badge & Submit";
 
   return (
     <section className={cn("w-full rounded-[32px] border border-[#ebecf3] bg-white/95 p-8", className)}>
@@ -128,6 +131,7 @@ export function SubmissionPreview({
                       type="button"
                       className={buttonClasses}
                       disabled={isPrimary && resolvedPrimaryDisabled}
+                      onClick={isPrimary ? onPrimaryAction : undefined}
                     >
                       <action.icon className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
                       {isPrimary ? resolvedPrimaryLabel : action.label}
