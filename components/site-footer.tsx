@@ -3,7 +3,6 @@ import Link from "next/link";
 import { Github, Mail, Twitter } from "lucide-react";
 
 import { JoinTheCommunity } from "@/components/join-the-community";
-import { FooterThemeToggle } from "@/components/footer-theme-toggle";
 
 type SiteFooterProps = {
   showJoin?: boolean;
@@ -290,10 +289,7 @@ export function SiteFooter({ showJoin = true }: SiteFooterProps) {
 
         <div className="mx-auto mt-10 flex w-full max-w-[92rem] flex-wrap items-center justify-between gap-4 border-t border-[#efeff4] px-6 pt-8 pb-8 text-sm text-[#6f7075] lg:px-12 xl:px-20">
           <p>Copyright © 2025 All Rights Reserved.</p>
-          <div className="flex items-center gap-4 text-[#4c4c54]">
-            <FooterThemeToggle variant="icon" />
-            <span>ToolCategory.com</span>
-          </div>
+          <span className="text-[#4c4c54]">ToolCategory.com</span>
         </div>
       </footer>
     </div>

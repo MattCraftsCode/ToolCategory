@@ -8,24 +8,9 @@ import { toast } from "react-toastify";
 
 import { cn, normalizeExternalUrl } from "@/lib/utils";
 
-const getBadgeOptions = (siteSlug: string) => [
-  {
-    id: "light" as const,
-    label: "Light Theme",
-    badgeSrc: "/badge-light.svg",
-    code: `<a href="https://toolcategory.com/sites/${siteSlug}" target="_blank" rel="noopener noreferrer">
+const buildBadgeCode = (siteSlug: string) => `<a href="https://toolcategory.com/sites/${siteSlug}" target="_blank" rel="noopener noreferrer">
   <img src="https://toolcategory.com/badge-light.svg" alt="Featured on ToolCategory.com" style="height: 54px; width: auto;" />
-</a>`,
-  },
-  {
-    id: "dark" as const,
-    label: "Dark Theme",
-    badgeSrc: "/badge-dark.svg",
-    code: `<a href="https://toolcategory.com/sites/${siteSlug}" target="_blank" rel="noopener noreferrer">
-  <img src="https://toolcategory.com/badge-dark.svg" alt="Featured on ToolCategory.com" style="height: 54px; width: auto;" />
-</a>`,
-  },
-];
+</a>`;
 
 type VerificationStatus = {
   type: "success" | "error";
@@ -54,13 +39,12 @@ export const BacklinkVerification = forwardRef<HTMLElement, BacklinkVerification
     },
     ref,
   ) {
-    const [theme, setTheme] = useState<"light" | "dark">("light");
     const [websiteUrl, setWebsiteUrl] = useState(defaultUrl);
     const [isVerifying, setIsVerifying] = useState(false);
     const [status, setStatus] = useState<VerificationStatus | null>(null);
     const [localVerified, setLocalVerified] = useState(isVerified);
 
-    const badgeOptions = useMemo(() => getBadgeOptions(siteSlug), [siteSlug]);
+    const badgeCode = useMemo(() => buildBadgeCode(siteSlug), [siteSlug]);
 
     useEffect(() => {
       setWebsiteUrl(defaultUrl);
@@ -70,34 +54,25 @@ export const BacklinkVerification = forwardRef<HTMLElement, BacklinkVerification
       setLocalVerified(isVerified);
     }, [isVerified]);
 
-    const active = useMemo(
-      () => badgeOptions.find((option) => option.id === theme) ?? badgeOptions[0],
-      [theme, badgeOptions],
-    );
-
     const previewContainerClasses = cn(
       "flex h-32 items-center justify-center rounded-[18px] border border-dashed border-[#e0e1e9]",
-      theme === "dark" ? "bg-[#0b0d12]" : "bg-[#fdf7f5]",
+      "bg-[#fdf7f5]",
     );
 
     const badgeFrameClasses = cn(
       "rounded-[12px]",
-      theme === "dark" ? "bg-[#0f1116]" : "bg-white",
+      "bg-white",
     );
-
-    const handleThemeChange = useCallback((nextTheme: "light" | "dark") => {
-      setTheme(nextTheme);
-    }, []);
 
     const handleCopy = useCallback(async () => {
       try {
-        await navigator.clipboard.writeText(active.code);
+        await navigator.clipboard.writeText(badgeCode);
         toast.success("Badge HTML copied to clipboard.");
       } catch (error) {
         console.error("[badge] copy failed", error);
         toast.error("Unable to copy the badge code. Please copy it manually.");
       }
-    }, [active.code]);
+    }, [badgeCode]);
 
     const handleVerify = useCallback(async () => {
       const trimmed = websiteUrl.trim();
@@ -143,7 +118,7 @@ export const BacklinkVerification = forwardRef<HTMLElement, BacklinkVerification
         const response = await fetch("/api/badge-verification", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ url: targetUrl, badgeTheme: theme, siteUuid }),
+          body: JSON.stringify({ url: targetUrl, siteUuid }),
         });
 
         const result = (await response.json().catch(() => null)) as
@@ -172,7 +147,7 @@ export const BacklinkVerification = forwardRef<HTMLElement, BacklinkVerification
       } finally {
         setIsVerifying(false);
       }
-    }, [localVerified, onVerified, siteUuid, theme, websiteUrl]);
+    }, [localVerified, onVerified, siteUuid, websiteUrl]);
 
     const isActionDisabled = localVerified || isVerifying;
 
@@ -198,55 +173,12 @@ export const BacklinkVerification = forwardRef<HTMLElement, BacklinkVerification
         <div className="space-y-7">
           <div className="space-y-3">
             <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[#a3a3af]">
-              Badge Theme
-            </p>
-            <div className="flex flex-wrap items-center gap-6 text-sm text-[#1f1f24]">
-              {badgeOptions.map((option) => {
-                const isActive = option.id === theme;
-                return (
-                  <label
-                    key={option.id}
-                    className={cn(
-                      "inline-flex cursor-pointer items-center gap-2 transition",
-                      isActive ? "text-[#1f1f24]" : "text-[#b3b3bc]",
-                    )}
-                  >
-                    <input
-                      type="radio"
-                      name="badge-theme"
-                      value={option.id}
-                      className="sr-only"
-                      checked={isActive}
-                      onChange={() => handleThemeChange(option.id)}
-                    />
-                    <span
-                      className={cn(
-                        "grid size-5 place-items-center rounded-full border",
-                        isActive ? "border-[#f98984]" : "border-[#d7d7df]",
-                      )}
-                    >
-                      <span
-                        className={cn(
-                          "size-3 rounded-full",
-                          isActive ? "bg-[#ff6d57]" : "bg-white",
-                        )}
-                      />
-                    </span>
-                    {option.label}
-                  </label>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[#a3a3af]">
               Badge Preview
             </p>
             <div className={previewContainerClasses}>
               <Image
-                src={active.badgeSrc}
-                alt={`ToolCategory badge ${active.id}`}
+                src="/badge-light.svg"
+                alt="ToolCategory badge"
                 width={220}
                 height={54}
                 className={badgeFrameClasses}
@@ -269,7 +201,7 @@ export const BacklinkVerification = forwardRef<HTMLElement, BacklinkVerification
             <textarea
               spellCheck={false}
               className="min-h-[110px] w-full resize-none rounded-[18px] border border-[#ececf1] bg-[#fbfbfd] px-4 py-3 font-mono text-xs leading-relaxed text-[#3a3a44]"
-              value={active.code}
+              value={badgeCode}
               readOnly
             />
           </div>

@@ -5,10 +5,7 @@ import { db } from "@/lib/db";
 import { sites } from "@/lib/db/schema";
 
 const TOOLCATEGORY_DOMAIN = "https://toolcategory.com/";
-const BADGE_SOURCES = {
-  light: "https://toolcategory.com/badge-light.svg",
-  dark: "https://toolcategory.com/badge-dark.svg",
-} as const;
+const BADGE_SOURCE = "https://toolcategory.com/badge-light.svg";
 const REQUIRED_BADGE_ALT = "Featured on ToolCategory.com";
 
 const TAG_ATTRIBUTE_REGEX = /([\w:-]+)\s*=\s*(?:"([^"]*)"|'([^']*)')/g;
@@ -69,10 +66,6 @@ export async function POST(request: Request) {
     typeof (payload as { url?: unknown })?.url === "string"
       ? (payload as { url: string }).url.trim()
       : "";
-  const rawThemeInput =
-    typeof (payload as { badgeTheme?: unknown })?.badgeTheme === "string"
-      ? (payload as { badgeTheme: string }).badgeTheme.trim().toLowerCase()
-      : "";
   const siteUuid =
     typeof (payload as { siteUuid?: unknown })?.siteUuid === "string"
       ? (payload as { siteUuid: string }).siteUuid.trim()
@@ -86,11 +79,7 @@ export async function POST(request: Request) {
     return buildErrorResponse("Missing submission identifier.");
   }
 
-  const badgeTheme =
-    rawThemeInput === "light" || rawThemeInput === "dark"
-      ? (rawThemeInput as keyof typeof BADGE_SOURCES)
-      : "dark";
-  const expectedBadgeSrc = BADGE_SOURCES[badgeTheme];
+  const expectedBadgeSrc = BADGE_SOURCE;
 
   let target: URL;
   try {
@@ -132,9 +121,7 @@ export async function POST(request: Request) {
 
     if (!hasRequiredBadge(html, expectedBadgeSrc)) {
       errors.push(
-        badgeTheme === "dark"
-          ? 'Include the dark badge image with alt text "Featured on ToolCategory.com".'
-          : 'Include the light badge image with alt text "Featured on ToolCategory.com".'
+        'Include the ToolCategory badge image with alt text "Featured on ToolCategory.com".'
       );
     }
 

@@ -669,6 +669,7 @@ export const getSiteForPayment = cache(
         id: site.id,
         uuid: site.uuid,
         name: site.name,
+        slug: site.slug,
         description: resolveDescription(site),
         image: site.image?.trim() ?? null,
         link: site.link?.trim() ?? null,
