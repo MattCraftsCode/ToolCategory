@@ -116,7 +116,7 @@ function RelatedToolCard({ tool, index }: { tool: HomePageTool; index: number })
             </time>
           ) : null}
         </div>
-        <h3 className="text-lg font-semibold text-[#1f1f24]">{tool.name}</h3>
+        <h3 className="text-lg font-semibold text-[#1f1f24] truncate">{tool.name}</h3>
         <p className="line-clamp-3 text-sm leading-relaxed text-[#5a5a63]">
           {tool.description}
         </p>

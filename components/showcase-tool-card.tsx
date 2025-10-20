@@ -52,7 +52,7 @@ export function ShowcaseToolCard({ tool }: ShowcaseToolCardProps) {
           className="group/detail relative flex flex-1 flex-col gap-3 rounded-[14px] text-left transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ff7d68]/30 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
         >
           <div className="flex flex-col gap-3">
-            <h3 className="text-xl font-semibold tracking-tight text-[#17171c] transition-colors duration-200 group-hover/detail:text-[#ff7d68]">
+            <h3 className="text-xl font-semibold tracking-tight text-[#17171c] transition-colors duration-200 group-hover/detail:text-[#ff7d68] truncate">
               {tool.name}
             </h3>
             <p className="text-sm leading-relaxed text-[#616168] line-clamp-2">

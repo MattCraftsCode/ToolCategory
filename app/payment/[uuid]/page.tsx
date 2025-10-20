@@ -76,6 +76,7 @@ export default async function PaymentPage({
   const paymentSite = {
     uuid: site.uuid,
     name: site.name,
+    slug: site.slug,
     description: site.description,
     image: imageSrc,
     category: primaryCategory,

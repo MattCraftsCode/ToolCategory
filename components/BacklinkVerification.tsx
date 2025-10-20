@@ -8,24 +8,24 @@ import { toast } from "react-toastify";
 
 import { cn, normalizeExternalUrl } from "@/lib/utils";
 
-const BADGE_OPTIONS = [
+const getBadgeOptions = (siteSlug: string) => [
   {
-    id: "light",
+    id: "light" as const,
     label: "Light Theme",
     badgeSrc: "/badge-light.svg",
-    code: `<a href="https://toolcategory.com/item/900cool-www900cool" target="_blank" rel="noopener noreferrer">
+    code: `<a href="https://toolcategory.com/sites/${siteSlug}" target="_blank" rel="noopener noreferrer">
   <img src="https://toolcategory.com/badge-light.svg" alt="Featured on ToolCategory.com" style="height: 54px; width: auto;" />
 </a>`,
   },
   {
-    id: "dark",
+    id: "dark" as const,
     label: "Dark Theme",
     badgeSrc: "/badge-dark.svg",
-    code: `<a href="https://toolcategory.com/item/900cool-www900cool" target="_blank" rel="noopener noreferrer">
+    code: `<a href="https://toolcategory.com/sites/${siteSlug}" target="_blank" rel="noopener noreferrer">
   <img src="https://toolcategory.com/badge-dark.svg" alt="Featured on ToolCategory.com" style="height: 54px; width: auto;" />
 </a>`,
   },
-] as const;
+];
 
 type VerificationStatus = {
   type: "success" | "error";
@@ -37,6 +37,7 @@ type BacklinkVerificationProps = {
   defaultUrl?: string;
   highlight?: boolean;
   siteUuid: string;
+  siteSlug: string;
   isVerified: boolean;
   onVerified?: () => void;
 };
@@ -47,16 +48,19 @@ export const BacklinkVerification = forwardRef<HTMLElement, BacklinkVerification
       defaultUrl = "https://www.900.cool",
       highlight = false,
       siteUuid,
+      siteSlug,
       isVerified,
       onVerified,
     },
     ref,
   ) {
-    const [theme, setTheme] = useState<(typeof BADGE_OPTIONS)[number]["id"]>("light");
+    const [theme, setTheme] = useState<"light" | "dark">("light");
     const [websiteUrl, setWebsiteUrl] = useState(defaultUrl);
     const [isVerifying, setIsVerifying] = useState(false);
     const [status, setStatus] = useState<VerificationStatus | null>(null);
     const [localVerified, setLocalVerified] = useState(isVerified);
+
+    const badgeOptions = useMemo(() => getBadgeOptions(siteSlug), [siteSlug]);
 
     useEffect(() => {
       setWebsiteUrl(defaultUrl);
@@ -67,8 +71,8 @@ export const BacklinkVerification = forwardRef<HTMLElement, BacklinkVerification
     }, [isVerified]);
 
     const active = useMemo(
-      () => BADGE_OPTIONS.find((option) => option.id === theme) ?? BADGE_OPTIONS[0],
-      [theme],
+      () => badgeOptions.find((option) => option.id === theme) ?? badgeOptions[0],
+      [theme, badgeOptions],
     );
 
     const previewContainerClasses = cn(
@@ -81,7 +85,7 @@ export const BacklinkVerification = forwardRef<HTMLElement, BacklinkVerification
       theme === "dark" ? "bg-[#0f1116]" : "bg-white",
     );
 
-    const handleThemeChange = useCallback((nextTheme: (typeof BADGE_OPTIONS)[number]["id"]) => {
+    const handleThemeChange = useCallback((nextTheme: "light" | "dark") => {
       setTheme(nextTheme);
     }, []);
 
@@ -197,7 +201,7 @@ export const BacklinkVerification = forwardRef<HTMLElement, BacklinkVerification
               Badge Theme
             </p>
             <div className="flex flex-wrap items-center gap-6 text-sm text-[#1f1f24]">
-              {BADGE_OPTIONS.map((option) => {
+              {badgeOptions.map((option) => {
                 const isActive = option.id === theme;
                 return (
                   <label

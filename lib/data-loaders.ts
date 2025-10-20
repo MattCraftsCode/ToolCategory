@@ -136,6 +136,7 @@ export type PaymentSite = {
   id: number;
   uuid: string;
   name: string;
+  slug: string;
   description: string;
   image: string | null;
   link: string | null;

@@ -124,15 +124,15 @@ function ToolCard({
         <span className="pointer-events-none absolute right-6 top-3 text-xs font-semibold text-[#7f7f88] opacity-0 transition duration-200 group-hover:translate-x-1 group-hover:opacity-100">
           Details →
         </span>
-        <div className="flex items-center gap-2 text-lg font-semibold text-[#1f1f24]">
+        <div className="flex items-center gap-2 text-lg font-semibold text-[#1f1f24] truncate">
           {isFeatured ? (
-            <Star className="h-4 w-4 text-[#ff7d68]" aria-hidden="true" />
+            <Star className="h-4 w-4 text-[#ff7d68] flex-shrink-0" aria-hidden="true" />
           ) : (
-            <span role="img" aria-label="bookmark" className="text-base">
+            <span role="img" aria-label="bookmark" className="text-base flex-shrink-0">
               🔖
             </span>
           )}
-          {tool.name}
+          <span className="truncate">{tool.name}</span>
         </div>
         <p
           className="line-clamp-2 text-sm leading-relaxed text-[#5a5a63]"

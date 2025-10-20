@@ -14,6 +14,7 @@ import { SumitSteps } from "@/components/SumitSteps";
 type PaymentSiteData = {
   uuid: string;
   name: string;
+  slug: string;
   description: string;
   image: string;
   category: string;
@@ -284,6 +285,7 @@ export function PaymentPageContent({ site }: PaymentPageContentProps) {
             ref={backlinkSectionRef}
             highlight={highlightBacklink}
             siteUuid={site.uuid}
+            siteSlug={site.slug}
             defaultUrl={site.link}
             isVerified={isVerified}
             onVerified={() => setIsVerified(true)}
