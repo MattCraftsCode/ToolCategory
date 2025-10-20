@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ShieldCheck } from "lucide-react";
+import { CheckCircle2, Crown, ShieldCheck, Sparkles } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "react-toastify";
 import { useSession } from "next-auth/react";
@@ -256,13 +256,55 @@ export function PaymentPageContent({ site }: PaymentPageContentProps) {
         />
 
         {isPaidUser ? (
-          <section className="rounded-[18px] border border-[#e5e5ea] bg-white p-10 text-center text-[#ff6d57]">
-            <p className="text-lg">
-              You&apos;re already on one of our paid plans, so badge verification isn&apos;t required.
-            </p>
-            <p className="mt-2 text-lg">
-              We&apos;re fast-tracking the review of your site—thanks for your patience!
-            </p>
+          <section className="relative overflow-hidden rounded-[24px] border border-[#f4decf] bg-gradient-to-br from-[#fff9f5] via-white to-[#ffe8dc] p-10 shadow-[0_24px_80px_-32px_rgba(255,125,104,0.45)]">
+            <div className="pointer-events-none absolute -right-10 -top-16 h-52 w-52 rounded-full bg-[#ff7d68] opacity-10 blur-[92px]" />
+            <div className="pointer-events-none absolute -bottom-16 left-1/3 h-48 w-48 rounded-full bg-[#fdddcf] opacity-60 blur-3xl" />
+
+            <div className="relative flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex flex-1 flex-col gap-6 text-left">
+                <div className="flex flex-wrap items-center gap-3">
+                  <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white/90 shadow-sm">
+                    <Crown className="h-5 w-5 text-[#ff7d68]" />
+                  </span>
+                  <span className="rounded-full border border-[#ffcab9] bg-[#ff7d68]/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-[#ff7d68]">
+                    VIP Member
+                  </span>
+                </div>
+
+                <div className="space-y-3">
+                  <h2 className="text-2xl font-semibold tracking-tight text-[#1f1f24]">
+                    Premium status confirmed
+                  </h2>
+                  <p className="max-w-2xl text-base leading-relaxed text-[#5a5a62]">
+                    You&apos;re already part of our paid VIP community. Badge verification is locked in,
+                    and your submission is moving through the fast lane.
+                  </p>
+                </div>
+
+                <ul className="grid gap-3 text-sm text-[#6a6a74] sm:grid-cols-2">
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 text-[#32b872]" />
+                    <span>Priority review in the next publishing cycle</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 text-[#32b872]" />
+                    <span>Early access to featured placement opportunities</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="flex basis-48 flex-col items-center justify-center gap-4 rounded-2xl border border-white/60 bg-white/80 px-6 py-8 text-center shadow-[0_18px_50px_-36px_rgba(23,23,28,0.55)] backdrop-blur">
+                <div className="rounded-full bg-[#ff7d68]/10 p-3 text-[#ff7d68]">
+                  <Sparkles className="h-6 w-6" />
+                </div>
+                <p className="text-xs font-semibold uppercase tracking-[0.4em] text-[#ff7d68]">
+                  Fast Track
+                </p>
+                <p className="text-sm leading-relaxed text-[#6a6a74]">
+                  We&apos;re fast-tracking the review of your site—thanks for building with us!
+                </p>
+              </div>
+            </div>
           </section>
         ) : (
           <section className="space-y-8 rounded-[18px] border border-[#e5e5ea] bg-white p-10">
