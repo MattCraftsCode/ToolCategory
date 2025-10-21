@@ -3,13 +3,12 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { ChevronDown, Search, Sparkles, SearchX } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 import { ShowcaseToolCard } from "@/components/showcase-tool-card";
 import { BackToTopButton } from "@/components/back-to-top-button";
 import { CategoryList } from "@/components/category-list";
 import { MultiSelect } from "@/components/multi-select";
-import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
 import {
@@ -42,6 +41,7 @@ type CategoryPageContentProps = {
   tools: HomePageTool[];
   categoryOptions: NamedSlug[];
   tagOptions: NamedSlug[];
+  footer?: ReactNode;
 };
 
 const uniqueBySlug = (items: NamedSlug[]): NamedSlug[] =>
@@ -52,6 +52,7 @@ export function CategoryPageContent({
   tools,
   categoryOptions,
   tagOptions,
+  footer,
 }: CategoryPageContentProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -387,7 +388,7 @@ export function CategoryPageContent({
         </main>
       </div>
 
-      <SiteFooter />
+      {footer}
 
       <BackToTopButton className="right-4" />
     </div>

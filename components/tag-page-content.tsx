@@ -3,12 +3,11 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { ChevronDown, Search, Sparkles, SearchX } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 import { ShowcaseToolCard } from "@/components/showcase-tool-card";
 import { BackToTopButton } from "@/components/back-to-top-button";
 import { MultiSelect } from "@/components/multi-select";
-import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { TagList } from "@/components/tag-list";
 import { Button } from "@/components/ui/button";
@@ -25,6 +24,7 @@ type TagPageContentProps = {
   tools: HomePageTool[];
   tagOptions: NamedSlug[];
   categoryOptions: NamedSlug[];
+  footer?: ReactNode;
 };
 
 const PAGE_SIZE = 8;
@@ -52,6 +52,7 @@ export function TagPageContent({
   tools,
   tagOptions,
   categoryOptions,
+  footer,
 }: TagPageContentProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -382,7 +383,7 @@ export function TagPageContent({
         </main>
       </div>
 
-      <SiteFooter />
+      {footer}
 
       <BackToTopButton className="right-4" />
     </div>

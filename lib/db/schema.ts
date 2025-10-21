@@ -11,6 +11,7 @@ import {
   varchar,
   uuid,
   numeric,
+  smallint,
 } from "drizzle-orm/pg-core";
 import type { AdapterAccount } from "next-auth/adapters";
 
@@ -140,6 +141,17 @@ export const siteTags = pgTable("site_tags", {
   siteId: bigint("site_id", { mode: "number" })
     .references(() => sites.id)
     .notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
+
+export const friendLinks = pgTable("friend_links", {
+  id: bigserial("id", { mode: "number" }).primaryKey(),
+  siteName: varchar("site_name", { length: 100 }),
+  siteUrl: varchar("site_url", { length: 512 }),
+  imageUrl: varchar("image_url", { length: 512 }),
+  code: text("code"),
+  status: smallint("status").default(1),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });

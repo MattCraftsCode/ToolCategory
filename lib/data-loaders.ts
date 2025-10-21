@@ -4,13 +4,14 @@ import { cache } from "react";
 import { db } from "@/lib/db";
 import {
   categories,
+  friendLinks,
   siteCategories,
   siteTags,
   sites,
   tags,
   users,
 } from "@/lib/db/schema";
-import { slugify } from "@/lib/utils";
+import { normalizeExternalUrl, slugify } from "@/lib/utils";
 
 const logError = (context: string, error: unknown) => {
   if (process.env.NODE_ENV !== "production") {
@@ -743,3 +744,51 @@ export const getSitesForUserDashboard = cache(
     }
   }
 );
+
+type FriendLinksResult = {
+  codeSnippets: { id: number; code: string }[];
+  textLinks: { id: number; name: string; url: string }[];
+};
+
+export const getFriendLinks = cache(async (): Promise<FriendLinksResult> => {
+  try {
+    const rows = await db
+      .select({
+        id: friendLinks.id,
+        siteName: friendLinks.siteName,
+        siteUrl: friendLinks.siteUrl,
+        code: friendLinks.code,
+      })
+      .from(friendLinks)
+      .where(eq(friendLinks.status, 1))
+      .orderBy(desc(friendLinks.createdAt));
+
+    const result: FriendLinksResult = { codeSnippets: [], textLinks: [] };
+
+    for (const row of rows) {
+      const code = row.code?.trim();
+      if (code) {
+        result.codeSnippets.push({ id: row.id, code });
+        continue;
+      }
+
+      const name = row.siteName?.trim();
+      const urlValue = row.siteUrl?.trim();
+      if (!name || !urlValue) {
+        continue;
+      }
+
+      const normalizedUrl = normalizeExternalUrl(urlValue);
+      if (!normalizedUrl) {
+        continue;
+      }
+
+      result.textLinks.push({ id: row.id, name, url: normalizedUrl });
+    }
+
+    return result;
+  } catch (error) {
+    logError("getFriendLinks", error);
+    return { codeSnippets: [], textLinks: [] };
+  }
+});

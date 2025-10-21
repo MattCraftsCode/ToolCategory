@@ -1,4 +1,5 @@
 import { CategoryPageContent } from "@/components/category-page-content";
+import { SiteFooter } from "@/components/site-footer";
 import { loadDiscoveryData } from "@/lib/tag-page-data";
 
 type CategorySlugPageProps = {
@@ -15,6 +16,7 @@ export default async function CategorySlugPage({ params }: CategorySlugPageProps
       tools={tools}
       categoryOptions={categories}
       tagOptions={tags}
+      footer={<SiteFooter />}
     />
   );
 }

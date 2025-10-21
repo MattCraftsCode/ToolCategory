@@ -1,8 +1,9 @@
 import Link from "next/link";
 
-import { Github, Mail, Twitter } from "lucide-react";
+import { ExternalLink, Github, Mail, Twitter } from "lucide-react";
 
 import { JoinTheCommunity } from "@/components/join-the-community";
+import { getFriendLinks } from "@/lib/data-loaders";
 
 type SiteFooterProps = {
   showJoin?: boolean;
@@ -75,75 +76,11 @@ const footerQuickLinks = [
   "Inspiration Tools",
 ];
 
-const partnerBadges = [
-  {
-    label: "Featured on",
-    brand: "BestskyTools",
-    icon: "B",
-    badgeClass: "bg-white border border-[#dbe7ff] text-[#1f1f24]",
-    iconClass: "bg-[#2563eb] text-white",
-    labelClass: "text-[#5f6c7b]",
-  },
-  {
-    label: "Featured on",
-    brand: "Wavel",
-    icon: "W",
-    badgeClass: "bg-white border border-[#d1d5db] text-[#1f1f24]",
-    iconClass: "bg-[#111827] text-white",
-    labelClass: "text-[#5f6c7b]",
-  },
-  {
-    label: "Featured on",
-    brand: "Startups Lab",
-    icon: "S",
-    badgeClass: "bg-white border-2 border-[#111827] text-[#111827]",
-    iconClass: "bg-[#111827] text-white",
-    labelClass: "text-[#5f6c7b]",
-  },
-  {
-    label: "Featured on",
-    brand: "ToolPilot",
-    icon: "T",
-    badgeClass: "bg-white border border-[#d1d5db] text-[#111827]",
-    iconClass: "bg-[#0f172a] text-white",
-    labelClass: "text-[#5f6c7b]",
-  },
-  {
-    label: "Featured on",
-    brand: "The One Startup",
-    icon: "O",
-    badgeClass: "bg-[#fff6f4] border border-[#f97316] text-[#ef4444]",
-    iconClass: "bg-[#ef4444] text-white",
-    labelClass: "text-[#ef4444]",
-  },
-  {
-    label: "Featured on",
-    brand: "Aura++",
-    icon: "A",
-    badgeClass: "bg-white border-2 border-[#0f172a] text-[#0f172a]",
-    iconClass: "bg-[#0f172a] text-white",
-    labelClass: "text-[#5f6c7b]",
-  },
-];
+export async function SiteFooter({ showJoin = true }: SiteFooterProps) {
+  const friendLinks = await getFriendLinks();
+  const hasCodeSnippets = friendLinks.codeSnippets.length > 0;
+  const hasTextLinks = friendLinks.textLinks.length > 0;
 
-const footerTextLinks = [
-  "sctory",
-  "Featured On Micro SaaS Examples",
-  "seewhatnewai",
-  "AgentWise",
-  "What Is AI Tools",
-  "indexless",
-  "All Dirs",
-  "indie.deals",
-  "SubmitHunt",
-  "AI Dirs",
-  "Okei AI Tools",
-  "AI Tool Center",
-  "Toolsfine",
-  "AITo",
-];
-
-export function SiteFooter({ showJoin = true }: SiteFooterProps) {
   return (
     <div className="w-full">
       {showJoin ? <JoinTheCommunity className="mt-24" /> : null}
@@ -245,47 +182,44 @@ export function SiteFooter({ showJoin = true }: SiteFooterProps) {
       </section>
 
       <footer className="mt-20 w-full">
-        <div className="mx-auto w-full max-w-[92rem] space-y-8 px-6 lg:px-12 xl:px-20">
-          <div className="relative marquee-container">
-            <div className="pointer-events-none absolute left-0 top-0 h-full w-20 bg-gradient-to-r from-white via-white/60 to-transparent"></div>
-            <div className="pointer-events-none absolute right-0 top-0 h-full w-20 bg-gradient-to-l from-white via-white/60 to-transparent"></div>
-            <div className="marquee-track gap-6">
-              {[...partnerBadges, ...partnerBadges].map((partner, index) => (
-                <div
-                  key={`${partner.brand}-${index}`}
-                  className={`flex min-w-[220px] items-center gap-3 rounded-2xl px-5 py-3 text-sm ${partner.badgeClass}`}
-                >
-                  <span
-                    className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold ${partner.iconClass}`}
-                  >
-                    {partner.icon}
-                  </span>
-                  <div className="flex flex-col">
-                    <span
-                      className={`text-[11px] font-medium uppercase tracking-[0.28em] ${partner.labelClass}`}
-                    >
-                      {partner.label}
-                    </span>
-                    <span className="text-sm font-semibold">
-                      {partner.brand}
-                    </span>
+        {hasCodeSnippets || hasTextLinks ? (
+          <div className="mx-auto w-full max-w-[92rem] space-y-10 px-6 lg:px-12 xl:px-20">
+            {hasCodeSnippets ? (
+              <div className="space-y-5">
+                <h3 className="text-lg font-semibold text-[#1f1f24]">Friend Links</h3>
+                <div className="overflow-x-auto">
+                  <div className="flex items-center gap-4 pb-2">
+                    {friendLinks.codeSnippets.map((snippet) => (
+                      <div
+                        key={snippet.id}
+                        className="friend-link-snippet flex-shrink-0 px-1"
+                      >
+                        <div dangerouslySetInnerHTML={{ __html: snippet.code }} />
+                      </div>
+                    ))}
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
+              </div>
+            ) : null}
 
-          <div className="flex w-full flex-wrap items-center justify-center gap-x-6 gap-y-3 text-sm text-[#5a5a63]">
-            {footerTextLinks.map((link) => (
-              <span
-                key={link}
-                className="cursor-pointer transition hover:text-[#ff7d68]"
-              >
-                {link}
-              </span>
-            ))}
+            {hasTextLinks ? (
+              <div className="flex w-full flex-wrap items-center justify-center gap-x-6 gap-y-3 text-sm text-[#5a5a63]">
+                {friendLinks.textLinks.map((link) => (
+                  <a
+                    key={link.id}
+                    href={link.url}
+                    className="inline-flex items-center gap-1 transition hover:text-[#ff7d68]"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {link.name}
+                    <ExternalLink className="h-3.5 w-3.5" />
+                  </a>
+                ))}
+              </div>
+            ) : null}
           </div>
-        </div>
+        ) : null}
 
         <div className="mx-auto mt-10 flex w-full max-w-[92rem] flex-wrap items-center justify-between gap-4 border-t border-[#efeff4] px-6 pt-8 pb-8 text-sm text-[#6f7075] lg:px-12 xl:px-20">
           <p>Copyright © 2025 All Rights Reserved.</p>

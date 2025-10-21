@@ -1,4 +1,5 @@
 import { TagPageContent } from "@/components/tag-page-content";
+import { SiteFooter } from "@/components/site-footer";
 import { loadDiscoveryData } from "@/lib/tag-page-data";
 
 export default async function TagPage() {
@@ -10,6 +11,7 @@ export default async function TagPage() {
       tools={tools}
       categoryOptions={categories}
       tagOptions={tags}
+      footer={<SiteFooter />}
     />
   );
 }
