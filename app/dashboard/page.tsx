@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import {
   Pagination,
   PaginationContent,
+  PaginationEllipsis,
   PaginationItem,
   PaginationLink,
   PaginationNext,
@@ -15,7 +16,7 @@ import { SiteHeader } from "@/components/site-header";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
-import { getSitesForUserDashboard } from "@/lib/data-loaders";
+import { getSitesForUserDashboard, getUserSitesCount } from "@/lib/data-loaders";
 import { getSubmissionStatus } from "@/lib/submission-status";
 
 const FALLBACK_IMAGE =
@@ -26,6 +27,8 @@ const PLAN_LABEL: Record<string, string> = {
   basic: "Basic",
   pro: "Pro",
 };
+
+const ITEMS_PER_PAGE = 5;
 
 const formatDateLabel = (date: Date | null, fallback: string) => {
   if (!date) {
@@ -39,7 +42,11 @@ const formatDateLabel = (date: Date | null, fallback: string) => {
   }).format(date);
 };
 
-export default async function DashboardPage() {
+type DashboardPageProps = {
+  searchParams: Promise<{ page?: string }>;
+};
+
+export default async function DashboardPage({ searchParams }: DashboardPageProps) {
   const session = await auth();
 
   if (!session?.user?.id) {
@@ -47,18 +54,22 @@ export default async function DashboardPage() {
   }
 
   const userId = session.user.id;
+  const params = await searchParams;
+  const currentPage = Math.max(1, parseInt(params.page ?? "1", 10));
 
-  const [userRows, userSites] = await Promise.all([
+  const [userRows, userSites, totalCount] = await Promise.all([
     db
       .select({ userType: users.userType })
       .from(users)
       .where(eq(users.id, userId))
       .limit(1),
-    getSitesForUserDashboard(userId),
+    getSitesForUserDashboard(userId, { page: currentPage, limit: ITEMS_PER_PAGE }),
+    getUserSitesCount(userId),
   ]);
 
   const userTypeRaw = userRows[0]?.userType?.toLowerCase() ?? "free";
   const planLabel = PLAN_LABEL[userTypeRaw] ?? PLAN_LABEL.free;
+  const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
 
   const submissions = userSites.map((site) => {
     const categoryName = site.categories[0]?.name ?? "Uncategorized";
@@ -136,19 +147,76 @@ export default async function DashboardPage() {
           </section>
         )}
 
-        {submissions.length > 1 ? (
+        {totalPages > 1 ? (
           <Pagination className="mt-12">
             <PaginationContent>
               <PaginationItem>
-                <PaginationPrevious href="#" isDisabled />
+                <PaginationPrevious
+                  href={currentPage > 1 ? `/dashboard?page=${currentPage - 1}` : "#"}
+                  isDisabled={currentPage <= 1}
+                />
               </PaginationItem>
+
+              {/* First page */}
+              {currentPage > 2 && (
+                <PaginationItem>
+                  <PaginationLink href="/dashboard?page=1">1</PaginationLink>
+                </PaginationItem>
+              )}
+
+              {/* Ellipsis before current page */}
+              {currentPage > 3 && (
+                <PaginationItem>
+                  <PaginationEllipsis />
+                </PaginationItem>
+              )}
+
+              {/* Previous page */}
+              {currentPage > 1 && (
+                <PaginationItem>
+                  <PaginationLink href={`/dashboard?page=${currentPage - 1}`}>
+                    {currentPage - 1}
+                  </PaginationLink>
+                </PaginationItem>
+              )}
+
+              {/* Current page */}
               <PaginationItem>
-                <PaginationLink href="#" isActive>
-                  1
+                <PaginationLink href={`/dashboard?page=${currentPage}`} isActive>
+                  {currentPage}
                 </PaginationLink>
               </PaginationItem>
+
+              {/* Next page */}
+              {currentPage < totalPages && (
+                <PaginationItem>
+                  <PaginationLink href={`/dashboard?page=${currentPage + 1}`}>
+                    {currentPage + 1}
+                  </PaginationLink>
+                </PaginationItem>
+              )}
+
+              {/* Ellipsis after current page */}
+              {currentPage < totalPages - 2 && (
+                <PaginationItem>
+                  <PaginationEllipsis />
+                </PaginationItem>
+              )}
+
+              {/* Last page */}
+              {currentPage < totalPages - 1 && (
+                <PaginationItem>
+                  <PaginationLink href={`/dashboard?page=${totalPages}`}>
+                    {totalPages}
+                  </PaginationLink>
+                </PaginationItem>
+              )}
+
               <PaginationItem>
-                <PaginationNext href="#" isDisabled />
+                <PaginationNext
+                  href={currentPage < totalPages ? `/dashboard?page=${currentPage + 1}` : "#"}
+                  isDisabled={currentPage >= totalPages}
+                />
               </PaginationItem>
             </PaginationContent>
           </Pagination>

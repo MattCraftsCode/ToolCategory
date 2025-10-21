@@ -187,12 +187,23 @@ export async function SiteFooter({ showJoin = true }: SiteFooterProps) {
             {hasCodeSnippets ? (
               <div className="space-y-5">
                 <h3 className="text-lg font-semibold text-[#1f1f24]">Friend Links</h3>
-                <div className="overflow-x-auto">
-                  <div className="flex items-center gap-4 pb-2">
+                <div className="marquee-container">
+                  <div className="marquee-track items-center gap-4">
+                    {/* First set */}
                     {friendLinks.codeSnippets.map((snippet) => (
                       <div
                         key={snippet.id}
                         className="friend-link-snippet flex-shrink-0 px-1"
+                      >
+                        <div dangerouslySetInnerHTML={{ __html: snippet.code }} />
+                      </div>
+                    ))}
+                    {/* Duplicate set for seamless loop */}
+                    {friendLinks.codeSnippets.map((snippet) => (
+                      <div
+                        key={`duplicate-${snippet.id}`}
+                        className="friend-link-snippet flex-shrink-0 px-1"
+                        aria-hidden="true"
                       >
                         <div dangerouslySetInnerHTML={{ __html: snippet.code }} />
                       </div>

@@ -65,7 +65,7 @@ export function SubmissionPreview({
             height={260}
             className="h-[260px] w-full rounded-[18px] object-cover transition-transform duration-500 ease-out group-hover:scale-105"
           />
-          <div className="absolute bottom-6 left-6 flex flex-col gap-2 text-xs">
+          <div className="absolute bottom-9 left-6 flex flex-col gap-2 text-xs">
             <span className="inline-flex w-fit items-center rounded-full bg-[#1f2330]/60 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.32em] text-white backdrop-blur">
               {category}
             </span>

@@ -7,7 +7,7 @@ import { sites } from "@/lib/db/schema";
 
 export async function POST(
   _request: Request,
-  context: { params: { uuid: string } }
+  context: { params: Promise<{ uuid: string }> }
 ) {
   const session = await auth();
   const userId = session?.user?.id;
@@ -16,7 +16,8 @@ export async function POST(
     return new NextResponse("Unauthorized", { status: 401 });
   }
 
-  const uuid = context.params.uuid;
+  const params = await context.params;
+  const uuid = params.uuid;
 
   if (!uuid) {
     return new NextResponse("Missing site identifier", { status: 400 });

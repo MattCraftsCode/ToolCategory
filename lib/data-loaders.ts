@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, inArray, isNotNull, ne } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, isNotNull, ne } from "drizzle-orm";
 import { cache } from "react";
 
 import { db } from "@/lib/db";
@@ -703,17 +703,26 @@ export const getSiteForPayment = cache(
 );
 
 export const getSitesForUserDashboard = cache(
-  async (userId: string): Promise<DashboardSite[]> => {
+  async (
+    userId: string,
+    options?: { page?: number; limit?: number }
+  ): Promise<DashboardSite[]> => {
     if (!userId) {
       return [];
     }
+
+    const page = options?.page ?? 1;
+    const limit = options?.limit ?? 10;
+    const offset = (page - 1) * limit;
 
     try {
       const rows = await db
         .select(SITE_BASE_SELECTION)
         .from(sites)
         .where(eq(sites.userId, userId))
-        .orderBy(desc(sites.createdAt));
+        .orderBy(desc(sites.createdAt))
+        .limit(limit)
+        .offset(offset);
 
       const normalized = normalizeSiteRows(rows as Partial<SiteRow>[]);
 
@@ -741,6 +750,26 @@ export const getSitesForUserDashboard = cache(
     } catch (error) {
       logError("getSitesForUserDashboard", error);
       return [];
+    }
+  }
+);
+
+export const getUserSitesCount = cache(
+  async (userId: string): Promise<number> => {
+    if (!userId) {
+      return 0;
+    }
+
+    try {
+      const result = await db
+        .select({ count: count() })
+        .from(sites)
+        .where(eq(sites.userId, userId));
+
+      return result[0]?.count ?? 0;
+    } catch (error) {
+      logError("getUserSitesCount", error);
+      return 0;
     }
   }
 );

@@ -10,7 +10,6 @@ interface VipUserStatusProps {
 export function VipUserStatus({ userType, siteName }: VipUserStatusProps) {
   const normalizedUserType = userType.toLowerCase();
   const isPro = normalizedUserType === "pro";
-  const isBasic = normalizedUserType === "basic";
 
   const planConfig = {
     pro: {

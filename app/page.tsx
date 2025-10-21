@@ -11,6 +11,9 @@ import type { HomePageTool } from "@/lib/data-loaders";
 import { getCategories, getHomePageSections } from "@/lib/data-loaders";
 import { cn, normalizeExternalUrl } from "@/lib/utils";
 
+// Revalidate every 5 minutes
+export const revalidate = 300;
+
 const imageGallery = [
   "https://images.unsplash.com/photo-1523475472560-d2df97ec485c?auto=format&fit=crop&w=1200&q=80",
   "https://images.unsplash.com/photo-1545239351-1141bd82e8a6?auto=format&fit=crop&w=1200&q=80",

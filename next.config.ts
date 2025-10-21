@@ -6,6 +6,13 @@ const nextConfig: NextConfig = {
     remotePatterns: [],
     unoptimized: true,
   },
+  // Fix for negative timeout warning in Next.js 15
+  experimental: {
+    staleTimes: {
+      dynamic: 30,
+      static: 180,
+    },
+  },
   webpack: (config) => {
     config.resolve.alias = config.resolve.alias ?? {};
     config.resolve.alias["react-toastify"] = path.resolve(
